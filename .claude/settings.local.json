@@ -4,7 +4,8 @@
       "Bash(git check-ignore:*)",
       "Bash(git add:*)",
       "Bash(git worktree:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

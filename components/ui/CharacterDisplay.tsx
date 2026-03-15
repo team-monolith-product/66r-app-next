@@ -45,7 +45,6 @@ export default function CharacterDisplay({
         <div
           className="rounded-t-full rounded-b-lg"
           style={{
-            width: sizeMap[size].face,
             background: `linear-gradient(180deg, ${a} 0%, ${c} 100%)`,
             boxShadow: `0 0 16px ${c}66`,
             ...(size === "lg"
