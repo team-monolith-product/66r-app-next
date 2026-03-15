@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { type CharacterData } from "@/components/AppContext";
 import Live2DViewer from "./Live2DViewer";
 
@@ -14,19 +15,36 @@ export default function CharacterDisplay({
   size = "md",
   mood = "neutral",
 }: CharacterDisplayProps) {
+  const [zoomed, setZoomed] = useState(false);
+
   return (
     <div className="relative flex flex-col items-center select-none">
-      {/* Glow effect behind canvas */}
+      {/* Glow */}
       <div
         className="absolute inset-0 rounded-full blur-2xl opacity-20 pointer-events-none"
         style={{ background: character.color }}
       />
-      {/* Live2D canvas */}
-      <div style={{ filter: `drop-shadow(0 0 12px ${character.color}66)` }}>
-        <Live2DViewer size={size} mood={mood} />
+
+      {/* Character wrapper — CSS zoom */}
+      <div
+        style={{
+          transform: zoomed ? "scale(1.7)" : "scale(1)",
+          transformOrigin: "50% 28%",
+          transition: "transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          position: "relative",
+          zIndex: zoomed ? 50 : "auto",
+          filter: `drop-shadow(0 0 ${zoomed ? "28px" : "12px"} ${character.color}${zoomed ? "aa" : "66"})`,
+          cursor: "pointer",
+        }}
+        onClick={() => setZoomed((v) => !v)}
+      >
+        <Live2DViewer size={size} mood={mood} focus={zoomed ? "full" : "upper"} />
       </div>
-      {/* Character name */}
-      <div className="mt-2 text-xs font-bold tracking-widest" style={{ color: character.color }}>
+
+      <div
+        className="mt-2 text-xs font-bold tracking-widest"
+        style={{ color: character.color }}
+      >
         {character.name}
       </div>
     </div>

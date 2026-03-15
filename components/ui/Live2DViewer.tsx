@@ -4,50 +4,38 @@ import { useEffect, useRef } from "react"
 
 type Size = "sm" | "md" | "lg"
 type Mood = "neutral" | "happy" | "shy" | "sad"
+type Focus = "upper" | "full"
 
 const CANVAS_SIZES: Record<Size, { w: number; h: number }> = {
-  sm: { w: 96, h: 128 },
+  sm: { w: 96,  h: 128 },
   md: { w: 160, h: 200 },
   lg: { w: 220, h: 280 },
 }
 
 const MOOD_EXPRESSION: Record<Mood, string | null> = {
   neutral: null,
-  happy: "3_redface",
-  shy: "3_redface",
-  sad: "5_tear",
+  happy:   "3_redface",
+  shy:     "3_redface",
+  sad:     "5_tear",
 }
 
 const MODEL_URL = "/live2d/MyWaifuTeacher/4.model3.json"
 
-// Module-level singletons (outside component)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _modelCache: any = null
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _modelLoadPromise: Promise<any> | null = null
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getOrLoadModel(Live2DModel: any): Promise<any> {
-  if (_modelCache) return _modelCache
-  if (!_modelLoadPromise) {
-    _modelLoadPromise = Live2DModel.from(MODEL_URL).then((m: any) => {
-      _modelCache = m
-      return m
-    })
-  }
-  return _modelLoadPromise
-}
-
 interface Props {
   size: Size
   mood?: Mood
+  focus?: Focus
 }
 
-export default function Live2DViewer({ size, mood = "neutral" }: Props) {
+const DPR = 2  // render at 2x for crisp CSS zoom
+
+export default function Live2DViewer({ size, mood = "neutral", focus = "upper" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const modelRef = useRef<any>(null)
   const { w, h } = CANVAS_SIZES[size]
+  const rw = w * DPR  // actual pixel buffer width
+  const rh = h * DPR  // actual pixel buffer height
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -59,8 +47,6 @@ export default function Live2DViewer({ size, mood = "neutral" }: Props) {
     const init = async () => {
       const PIXI = await import("pixi.js")
       const { Live2DModel } = await import("pixi-live2d-display/cubism4")
-
-      // Register PIXI ticker for Live2D animation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Live2DModel.registerTicker(PIXI.Ticker as any)
 
@@ -68,79 +54,89 @@ export default function Live2DViewer({ size, mood = "neutral" }: Props) {
 
       app = new PIXI.Application({
         view: canvasRef.current,
-        width: w,
-        height: h,
+        width: rw,
+        height: rh,
         backgroundAlpha: 0,
         antialias: true,
       })
 
-      const model = await getOrLoadModel(Live2DModel)
+      const model = await Live2DModel.from(MODEL_URL)
 
       if (destroyed) {
-        if (app) app.destroy(false, { children: false })
+        if (app) app.destroy(false)
         return
       }
 
-      // If model already has a parent (from a previous mount), remove it
-      if (model.parent) {
-        model.parent.removeChild(model)
-      }
-
-      // Scale model to fit inside canvas (fit-inside, centered)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const im = model.internalModel as any
-      const originalWidth = im.originalWidth ?? model.width
+      const originalWidth  = im.originalWidth  ?? model.width
       const originalHeight = im.originalHeight ?? model.height
-      const scale = Math.min(w / originalWidth, h / originalHeight)
+
+      // Initial positioning (upper body default)
+      const scale = rw / originalWidth
       model.scale.set(scale)
-      model.anchor.set(0.5, 0.5)
-      model.x = w / 2
-      model.y = h / 2
+      model.anchor.set(0.5, 0)
+      model.x = rw / 2
+      model.y = rh * 0.05
 
       app.stage.addChild(model as unknown as import("pixi.js").DisplayObject)
       modelRef.current = model
 
-      // Apply initial mood expression
       const expr = MOOD_EXPRESSION[mood]
-      if (expr) {
-        model.expression(expr)
-      }
+      if (expr) model.expression(expr)
     }
 
     init().catch(console.error)
 
     return () => {
       destroyed = true
-      if (modelRef.current && app) {
-        app.stage.removeChild(modelRef.current)
-      }
       modelRef.current = null
       if (app) {
-        app.destroy(false, { children: false })
+        app.destroy(false)
         app = null
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h])
+  }, [rw, rh])
 
-  // Handle mood changes after mount
+  // Reposition model when focus changes — no app recreation
+  useEffect(() => {
+    const model = modelRef.current
+    if (!model) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const im = model.internalModel as any
+    const ow = im.originalWidth  ?? model.width
+    const oh = im.originalHeight ?? model.height
+
+    if (focus === "full") {
+      const s = Math.min(rw / ow, rh / oh)
+      model.scale.set(s)
+      model.anchor.set(0.5, 0.5)
+      model.x = rw / 2
+      model.y = rh / 2
+    } else {
+      const s = rw / ow
+      model.scale.set(s)
+      model.anchor.set(0.5, 0)
+      model.x = rw / 2
+      model.y = rh * 0.05
+    }
+  }, [focus, rw, rh])
+
   useEffect(() => {
     const model = modelRef.current
     if (!model) return
     const expr = MOOD_EXPRESSION[mood]
-    if (expr) {
-      model.expression(expr)
-    } else {
-      model.expression()
-    }
+    if (expr) model.expression(expr)
+    else model.expression()
   }, [mood])
 
   return (
     <canvas
       ref={canvasRef}
-      width={w}
-      height={h}
-      style={{ display: "block" }}
+      width={rw}
+      height={rh}
+      style={{ display: "block", width: w, height: h }}
     />
   )
 }
