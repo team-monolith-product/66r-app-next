@@ -162,12 +162,13 @@ export default function EndingScreen() {
           </div>
         </div>
 
-        {/* 캐릭터 */}
-        <div className="flex-1 flex items-end justify-center pointer-events-none" style={{ zIndex: 1 }}>
+        {/* 캐릭터 — 배경 full */}
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none" style={{ zIndex: 1 }}>
           {character && (
-            <CharacterDisplay character={character} size="lg" mood={mood} />
+            <CharacterDisplay character={character} size="hero" mood={mood} />
           )}
         </div>
+        <div className="flex-1" />
 
         {/* 대화 박스 */}
         <div className="relative z-10 px-4 pb-6" onClick={(e) => e.stopPropagation()}>

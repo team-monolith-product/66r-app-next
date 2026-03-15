@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApp } from "@/components/AppContext";
 import BottomNav from "@/components/ui/BottomNav";
 import GameButton from "@/components/ui/GameButton";
+import CharacterDisplay from "@/components/ui/CharacterDisplay";
 
 interface StoryEpisode {
   id: number;
@@ -95,15 +96,15 @@ export default function StoryScreen() {
     return (
       <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ background: BG }}>
         {/* 배경 글로우 */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse 70% 50% at 50% 30%, ${character?.color ?? "#4aacef"}18 0%, transparent 70%)` }}
-        />
+        {/* 배경 캐릭터 */}
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none" style={{ zIndex: 1 }}>
+          {character && <CharacterDisplay character={character} size="hero" mood="neutral" />}
+        </div>
 
         {/* 스토리 타이틀 */}
-        <div className="px-6 pt-12 pb-4 z-10">
+        <div className="px-4 pt-10 pb-3 z-10 mx-3 mt-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(160,210,240,0.45)" }}>
           <p className="text-xs tracking-widest" style={{ color: "#7a9bb5" }}>STORY {reading.id}</p>
-          <h2 className="text-xl font-black mt-1" style={{ color: character?.color ?? "#3a90d4" }}>
+          <h2 className="text-xl font-black mt-0.5" style={{ color: character?.color ?? "#3a90d4" }}>
             {reading.title}
           </h2>
         </div>
