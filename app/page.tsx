@@ -17,24 +17,20 @@ function ScreenRouter() {
   const { state } = useApp();
 
   const screens: Record<typeof state.screen, React.ReactNode> = {
-    splash:             <SplashScreen />,
-    onboarding:         <OnboardingScreen />,
-    habitSetup:         <HabitSetupScreen />,
-    characterSelect:    <CharacterSelectScreen />,
-    home:               <HomeScreen />,
-    verification:       <VerificationScreen />,
+    splash: <SplashScreen />,
+    onboarding: <OnboardingScreen />,
+    habitSetup: <HabitSetupScreen />,
+    characterSelect: <CharacterSelectScreen />,
+    home: <HomeScreen />,
+    verification: <VerificationScreen />,
     verificationResult: <VerificationResultScreen />,
-    chat:               <ChatScreen />,
-    story:              <StoryScreen />,
-    dashboard:          <DashboardScreen />,
-    ending:             <EndingScreen />,
+    chat: <ChatScreen />,
+    story: <StoryScreen />,
+    dashboard: <DashboardScreen />,
+    ending: <EndingScreen />,
   };
 
-  return (
-    <div className="app-container">
-      {screens[state.screen]}
-    </div>
-  );
+  return <div className="app-container">{screens[state.screen]}</div>;
 }
 
 export default function Page() {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Noto_Serif_KR, Cinzel_Decorative } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body
         className={`${notoSerifKR.variable} ${cinzelDecorative.variable} antialiased`}
       >
+        <Script src="/live2d/live2dcubismcore.min.js" strategy="beforeInteractive" />
         {children}
       </body>
     </html>
