@@ -57,12 +57,9 @@ export default function OnboardingScreen() {
           {/* 아이콘 */}
           <div
             className="w-24 h-24 rounded-full glass-panel flex items-center justify-center"
-            style={{ boxShadow: "0 0 40px rgba(240,192,64,0.2)" }}
+            style={{ boxShadow: "0 0 40px rgba(74,172,239,0.25)" }}
           >
-            <span
-              className="text-5xl"
-              style={{ textShadow: "0 0 20px var(--gold)" }}
-            >
+            <span className="text-5xl">
               {slide.icon}
             </span>
           </div>
@@ -88,7 +85,7 @@ export default function OnboardingScreen() {
             style={{
               width: i === page ? "20px" : "6px",
               height: "6px",
-              background: i === page ? "var(--gold)" : "rgba(255,255,255,0.2)",
+              background: i === page ? "#4aacef" : "rgba(160,210,240,0.4)",
             }}
           />
         ))}

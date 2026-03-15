@@ -4,7 +4,6 @@ import { useApp } from "@/components/AppContext";
 import BottomNav from "@/components/ui/BottomNav";
 import AffectionBar from "@/components/ui/AffectionBar";
 import DayCalendar from "@/components/ui/DayCalendar";
-import SparkleEffect from "@/components/ui/SparkleEffect";
 
 export default function DashboardScreen() {
   const { state } = useApp();
@@ -24,7 +23,6 @@ export default function DashboardScreen() {
 
   return (
     <div className="relative w-full h-full game-gradient-bg flex flex-col overflow-hidden">
-      <SparkleEffect count={6} />
 
       {/* 헤더 */}
       <div className="px-5 pt-12 pb-3 z-10">
@@ -79,11 +77,11 @@ export default function DashboardScreen() {
                     className="w-full aspect-square rounded-lg flex items-center justify-center text-xs"
                     style={{
                       background: done
-                        ? `${character?.color ?? "var(--gold)"}44`
+                        ? `${character?.color ?? "#3a90d4"}44`
                         : past
-                        ? "rgba(239,68,68,0.15)"
-                        : "rgba(255,255,255,0.05)",
-                      border: done ? `1px solid ${character?.color ?? "var(--gold)"}66` : "none",
+                        ? "rgba(239,100,100,0.18)"
+                        : "rgba(160,210,240,0.12)",
+                      border: done ? `1px solid ${character?.color ?? "#3a90d4"}66` : "none",
                     }}
                   >
                     {done ? "✓" : past ? "✗" : "·"}

@@ -70,8 +70,8 @@ export default function VerificationScreen() {
             className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
             style={
               method === m
-                ? { background: `${character?.color ?? "var(--gold)"}33`, color: character?.color ?? "var(--gold)", border: `1px solid ${character?.color ?? "var(--gold)"}55` }
-                : { background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)" }
+                ? { background: `${character?.color ?? "#4aacef"}22`, color: character?.color ?? "#4aacef", border: `1px solid ${character?.color ?? "#4aacef"}55` }
+                : { background: "rgba(255,255,255,0.70)", color: "var(--text-secondary)", border: "1px solid rgba(160,210,240,0.4)" }
             }
           >
             {m === "check" ? "✓ 완료 체크" : m === "text" ? "✏ 텍스트" : "📷 사진"}
@@ -87,8 +87,8 @@ export default function VerificationScreen() {
               onClick={() => !checking && handleVerify(true)}
               className="w-36 h-36 rounded-full glass-panel flex flex-col items-center justify-center gap-2 transition-all active:scale-95"
               style={{
-                border: `2px solid ${character?.color ?? "var(--gold)"}66`,
-                boxShadow: `0 0 40px ${character?.color ?? "var(--gold)"}22`,
+                border: `2px solid ${character?.color ?? "#4aacef"}66`,
+                boxShadow: `0 0 40px ${character?.color ?? "#4aacef"}33`,
               }}
             >
               <span className="text-5xl">✓</span>

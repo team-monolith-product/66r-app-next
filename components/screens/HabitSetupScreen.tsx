@@ -54,8 +54,8 @@ export default function HabitSetupScreen() {
             className="px-4 py-1.5 rounded-full text-sm font-bold transition-all"
             style={
               mode === t
-                ? { background: "var(--gold)", color: "#1a0e00" }
-                : { background: "rgba(255,255,255,0.08)", color: "var(--text-secondary)" }
+                ? { background: "#4aacef", color: "#fff", boxShadow: "0 2px 10px rgba(74,172,239,0.35)" }
+                : { background: "rgba(255,255,255,0.70)", color: "var(--text-secondary)", border: "1px solid rgba(160,210,240,0.5)" }
             }
           >
             {t === "preset" ? "추천 습관" : "직접 입력"}
@@ -75,9 +75,9 @@ export default function HabitSetupScreen() {
                 style={
                   selected === p.label
                     ? {
-                        border: "1px solid var(--gold)",
-                        background: "rgba(240,192,64,0.1)",
-                        boxShadow: "0 0 16px rgba(240,192,64,0.2)",
+                        border: "1px solid rgba(74,172,239,0.8)",
+                        background: "rgba(74,172,239,0.12)",
+                        boxShadow: "0 0 16px rgba(74,172,239,0.25)",
                       }
                     : {}
                 }
