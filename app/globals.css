@@ -1,26 +1,208 @@
 @import "tailwindcss";
 
+/* ── 게임 테마 CSS 변수 ─────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 배경 */
+  --bg-deep:    #0a0718;
+  --bg-mid:     #120d2e;
+  --bg-surface: #1a1240;
+
+  /* 액센트 */
+  --gold:       #f0c040;
+  --gold-light: #fde68a;
+  --gold-dark:  #b8860b;
+
+  /* 캐릭터 테마 컬러 */
+  --aria-color:  #a78bfa;
+  --lina-color:  #f472b6;
+  --sera-color:  #60a5fa;
+
+  /* 글라스 */
+  --glass-bg:     rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+
+  /* 텍스트 */
+  --text-primary:   #f5f0ff;
+  --text-secondary: #a9a0c4;
+  --text-gold:      #f0c040;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── 전역 리셋 ──────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-noto-serif-kr), "Noto Serif KR", serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 게임 배경 그라디언트 ───────────────────────────── */
+.game-gradient-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(88,28,135,0.45) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(29,78,216,0.3) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0718 0%, #120d2e 40%, #0d1440 100%);
+  min-height: 100%;
+}
+
+/* ── 글라스 패널 ────────────────────────────────────── */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+}
+
+.glass-panel-dark {
+  background: rgba(10,7,24,0.7);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+}
+
+/* ── 게임 버튼 베이스 ───────────────────────────────── */
+.game-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-family: var(--font-noto-serif-kr), serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.1s, box-shadow 0.1s;
+  border: none;
+  outline: none;
+  user-select: none;
+}
+.game-btn:active {
+  transform: scale(0.96);
+}
+
+.game-btn-primary {
+  background: linear-gradient(135deg, #f0c040 0%, #d97706 100%);
+  color: #1a0e00;
+  box-shadow: 0 4px 20px rgba(240,192,64,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.game-btn-primary:hover {
+  box-shadow: 0 6px 28px rgba(240,192,64,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.game-btn-secondary {
+  background: linear-gradient(135deg, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.5) 100%);
+  color: #ede9fe;
+  border: 1px solid rgba(167,139,250,0.5);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.3);
+}
+
+.game-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+
+.game-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(239,68,68,0.35);
+}
+
+/* ── 호감도 바 ──────────────────────────────────────── */
+.affection-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+.affection-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a78bfa 0%, #f0c040 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(240,192,64,0.5);
+}
+
+/* ── 장식 폰트 ──────────────────────────────────────── */
+.font-cinzel {
+  font-family: var(--font-cinzel-decorative), "Cinzel Decorative", cursive;
+}
+
+/* ── 별 파티클 애니메이션 ───────────────────────────── */
+@keyframes sparkle-float {
+  0%   { transform: translateY(0) scale(1);   opacity: 0.8; }
+  50%  { transform: translateY(-12px) scale(1.3); opacity: 1; }
+  100% { transform: translateY(-24px) scale(0); opacity: 0; }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(240,192,64,0.3); }
+  50%       { box-shadow: 0 0 24px rgba(240,192,64,0.7); }
+}
+
+@keyframes float-up {
+  0%   { transform: translateY(0);    opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-slide-up  { animation: slide-up 0.4s ease forwards; }
+.animate-fade-in   { animation: fade-in  0.5s ease forwards; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* ── 텍스트 shimmer ─────────────────────────────────── */
+.text-shimmer {
+  background: linear-gradient(90deg, #f0c040, #fde68a, #f0c040);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* ── 스크롤바 숨기기 ────────────────────────────────── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── 모바일 컨테이너 ────────────────────────────────── */
+.app-container {
+  width: 100%;
+  max-width: 390px;
+  height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
 }
