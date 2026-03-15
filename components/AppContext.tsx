@@ -57,7 +57,8 @@ export type AppAction =
   | { type: "ADD_AFFECTION"; amount: number }
   | { type: "UNLOCK_STORY"; storyId: number }
   | { type: "SET_ENDING"; endingType: "best" | "normal" | "bad" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "DEBUG_PATCH"; patch: Partial<AppState> };
 
 /* ── 캐릭터 데이터 ──────────────────────────────────── */
 export const CHARACTERS: CharacterData[] = [
@@ -199,6 +200,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case "RESET":
       return { ...initialState };
+
+    case "DEBUG_PATCH":
+      return { ...state, ...action.patch };
 
     default:
       return state;

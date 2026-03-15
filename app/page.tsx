@@ -12,6 +12,7 @@ import ChatScreen from "@/components/screens/ChatScreen";
 import StoryScreen from "@/components/screens/StoryScreen";
 import DashboardScreen from "@/components/screens/DashboardScreen";
 import EndingScreen from "@/components/screens/EndingScreen";
+import DebugPanel from "@/components/ui/DebugPanel";
 
 function ScreenRouter() {
   const { state } = useApp();
@@ -30,7 +31,12 @@ function ScreenRouter() {
     ending: <EndingScreen />,
   };
 
-  return <div className="app-container">{screens[state.screen]}</div>;
+  return (
+    <div className="app-container relative">
+      {screens[state.screen]}
+      <DebugPanel />
+    </div>
+  );
 }
 
 export default function Page() {
