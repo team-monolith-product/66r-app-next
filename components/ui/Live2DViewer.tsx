@@ -2,14 +2,15 @@
 
 import { useEffect, useRef } from "react"
 
-type Size = "sm" | "md" | "lg"
+type Size = "sm" | "md" | "lg" | "hero"
 type Mood = "neutral" | "happy" | "shy" | "sad"
 type Focus = "upper" | "full"
 
 const CANVAS_SIZES: Record<Size, { w: number; h: number }> = {
-  sm: { w: 96,  h: 128 },
-  md: { w: 160, h: 200 },
-  lg: { w: 220, h: 280 },
+  sm:   { w: 96,  h: 128 },
+  md:   { w: 160, h: 200 },
+  lg:   { w: 220, h: 280 },
+  hero: { w: 390, h: 750 },
 }
 
 const MOOD_EXPRESSION: Record<Mood, string | null> = {

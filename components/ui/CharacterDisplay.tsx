@@ -6,7 +6,7 @@ import Live2DViewer from "./Live2DViewer";
 
 interface CharacterDisplayProps {
   character: CharacterData;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "hero";
   mood?: "neutral" | "happy" | "shy" | "sad";
 }
 
@@ -25,7 +25,7 @@ export default function CharacterDisplay({
         style={{ background: character.color }}
       />
 
-      {/* Character wrapper — CSS zoom */}
+      {/* Character wrapper — CSS zoom (hero 사이즈에서는 비활성) */}
       <div
         style={{
           transform: zoomed ? "scale(1.7)" : "scale(1)",
@@ -34,19 +34,21 @@ export default function CharacterDisplay({
           position: "relative",
           zIndex: zoomed ? 50 : "auto",
           filter: `drop-shadow(0 0 ${zoomed ? "28px" : "12px"} ${character.color}${zoomed ? "aa" : "66"})`,
-          cursor: "pointer",
+          cursor: size === "hero" ? "default" : "pointer",
         }}
-        onClick={() => setZoomed((v) => !v)}
+        onClick={size !== "hero" ? () => setZoomed((v) => !v) : undefined}
       >
         <Live2DViewer size={size} mood={mood} focus={zoomed ? "full" : "upper"} />
       </div>
 
-      <div
-        className="mt-2 text-xs font-bold tracking-widest"
-        style={{ color: character.color }}
-      >
-        {character.name}
-      </div>
+      {size !== "hero" && (
+        <div
+          className="mt-2 text-xs font-bold tracking-widest"
+          style={{ color: character.color }}
+        >
+          {character.name}
+        </div>
+      )}
     </div>
   );
 }

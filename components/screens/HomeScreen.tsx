@@ -32,21 +32,23 @@ export default function HomeScreen() {
     <div className="relative w-full h-full game-gradient-bg flex flex-col overflow-hidden">
       <SparkleEffect count={6} />
 
+      {/* 배경 캐릭터 — UI 뒤에 깔림 */}
+      <div className="absolute inset-0 flex items-end justify-center" style={{ zIndex: 1 }}>
+        <CharacterDisplay
+          character={character}
+          size="hero"
+          mood={todayVerified ? "happy" : "neutral"}
+        />
+      </div>
+
       {/* 상단 HUD */}
       <TopStatusBar />
 
       {/* 호감도 */}
       <AffectionBar />
 
-      {/* 캐릭터 영역 */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 z-10">
-        <CharacterDisplay
-          character={character}
-          size="lg"
-          mood={todayVerified ? "happy" : "neutral"}
-        />
-
-        {/* 말풍선 */}
+      {/* 말풍선 */}
+      <div className="flex-1 flex flex-col items-center justify-end pb-4 px-6 z-10 pointer-events-none">
         <div className="glass-panel px-5 py-3 max-w-[280px] text-center relative">
           <div
             className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 glass-panel"
