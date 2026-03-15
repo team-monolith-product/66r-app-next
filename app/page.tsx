@@ -40,7 +40,7 @@ function ScreenRouter() {
 export default function Page() {
   return (
     <AppProvider>
-      <div className="w-full h-dvh flex items-center justify-center bg-[#050310]">
+      <div className="w-full min-h-dvh flex items-center justify-center bg-[#050310] py-6">
         <ScreenRouter />
       </div>
     </AppProvider>
