@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Home, BarChart2, BookOpen } from "lucide-react";
+import { Home, BarChart2, BookOpen, ShoppingBag } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -12,6 +12,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/home",      label: "홈",     Icon: Home },
+  { path: "/shop",      label: "상점",   Icon: ShoppingBag },
   { path: "/dashboard", label: "기록",   Icon: BarChart2 },
   { path: "/story",     label: "스토리", Icon: BookOpen },
 ];

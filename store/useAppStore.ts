@@ -13,6 +13,16 @@ export interface CharacterData {
   type: "tsundere" | "genki" | "intellectual";
 }
 
+export interface GachaReward {
+  label: string;
+  type: "affection" | "coins";
+  amount: number;
+  rarity: "common" | "rare" | "epic";
+}
+
+export const GACHA_COST = 30;
+export const CHAR_PRICE = 150;
+
 export interface AppState {
   habits: string[];
   character: CharacterData | null;
@@ -30,6 +40,7 @@ export interface AppState {
   endingType: "best" | "normal" | "bad" | null;
   pendingStoryRead: number | null;
   badStoryUnlocked: boolean;
+  ownedCharacters: string[];
 }
 
 export interface AppActions {
@@ -43,6 +54,8 @@ export interface AppActions {
   unlockStory: (storyId: number) => void;
   setEnding: (endingType: "best" | "normal" | "bad") => void;
   clearPendingStory: () => void;
+  purchaseCharacter: (characterId: string) => boolean;
+  pullGacha: () => GachaReward | null;
   reset: () => void;
   debugPatch: (patch: Partial<AppState>) => void;
 }
@@ -120,6 +133,7 @@ const initialState: AppState = {
   endingType: null,
   pendingStoryRead: null,
   badStoryUnlocked: false,
+  ownedCharacters: [],
 };
 
 /* ── Zustand Store ──────────────────────────────────── */
@@ -131,7 +145,15 @@ export const useAppStore = create<AppState & AppActions>()(
       setHabits: (habits) =>
         set({ habits, todayHabitChecks: new Array(habits.length).fill(false) }),
 
-      setCharacter: (character) => set({ character }),
+      setCharacter: (character) => {
+        const state = get();
+        set({
+          character,
+          ownedCharacters: state.ownedCharacters.includes(character.id)
+            ? state.ownedCharacters
+            : [...state.ownedCharacters, character.id],
+        });
+      },
 
       toggleHabitCheck: (index) => {
         const checks = [...get().todayHabitChecks];
@@ -211,6 +233,35 @@ export const useAppStore = create<AppState & AppActions>()(
       },
 
       clearPendingStory: () => set({ pendingStoryRead: null }),
+
+      purchaseCharacter: (characterId) => {
+        const state = get();
+        if (state.currency < CHAR_PRICE || state.ownedCharacters.includes(characterId)) return false;
+        set({
+          currency: state.currency - CHAR_PRICE,
+          ownedCharacters: [...state.ownedCharacters, characterId],
+        });
+        return true;
+      },
+
+      pullGacha: () => {
+        const state = get();
+        if (state.currency < GACHA_COST) return null;
+        const pool: (GachaReward & { cumProb: number })[] = [
+          { label: "호감도 +10", type: "affection", amount: 10, rarity: "common", cumProb: 0.55 },
+          { label: "코인 +50",   type: "coins",     amount: 50, rarity: "common", cumProb: 0.85 },
+          { label: "호감도 +30", type: "affection", amount: 30, rarity: "rare",   cumProb: 0.97 },
+          { label: "코인 +200",  type: "coins",     amount: 200, rarity: "epic",  cumProb: 1.00 },
+        ];
+        const rand = Math.random();
+        const { label, type, amount, rarity } = pool.find((p) => rand < p.cumProb)!;
+        const reward: GachaReward = { label, type, amount, rarity };
+        set({
+          currency: state.currency - GACHA_COST + (type === "coins" ? amount : 0),
+          affection: type === "affection" ? Math.min(660, state.affection + amount) : state.affection,
+        });
+        return reward;
+      },
 
       setEnding: (endingType) => set({ endingType }),
 
