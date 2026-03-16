@@ -1,18 +1,20 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { Home, Heart, BarChart2, BookOpen } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: "/home",      label: "홈",     icon: "⌂" },
-  { path: "/chat",      label: "대화",   icon: "♡" },
-  { path: "/dashboard", label: "기록",   icon: "◈" },
-  { path: "/story",     label: "스토리", icon: "✦" },
+  { path: "/home",      label: "홈",     Icon: Home },
+  { path: "/chat",      label: "대화",   Icon: Heart },
+  { path: "/dashboard", label: "기록",   Icon: BarChart2 },
+  { path: "/story",     label: "스토리", Icon: BookOpen },
 ];
 
 export default function BottomNav() {
@@ -37,11 +39,7 @@ export default function BottomNav() {
               key={item.path}
               onClick={() => router.push(item.path)}
               className="flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-all active:scale-95"
-              style={
-                isActive
-                  ? { color: "#3a90d4" }
-                  : { color: "#8ab0c8" }
-              }
+              style={isActive ? { color: "#3a90d4" } : { color: "#8ab0c8" }}
             >
               {isActive && (
                 <div
@@ -49,12 +47,11 @@ export default function BottomNav() {
                   style={{ background: "#3a90d4", transform: "translateY(-6px)" }}
                 />
               )}
-              <span
-                className="text-xl leading-none"
+              <item.Icon
+                size={22}
+                strokeWidth={isActive ? 2.2 : 1.8}
                 style={isActive ? { filter: "drop-shadow(0 0 4px rgba(58,144,212,0.5))" } : {}}
-              >
-                {item.icon}
-              </span>
+              />
               <span className="text-[10px] font-bold tracking-wide">{item.label}</span>
             </button>
           );

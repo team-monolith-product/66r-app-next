@@ -5,6 +5,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
+import { Flame, Sparkles, Target, Heart, ChevronRight } from "lucide-react";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -79,11 +80,11 @@ export default function HomeScreen() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <span className="text-sm">🔥</span>
+              <Flame size={15} color="#e06820" />
               <span className="text-xs font-black" style={{ color: "#e06820" }}>{streak}</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <span className="text-xs font-bold" style={{ color: "#c8a000" }}>✦</span>
+              <Sparkles size={12} color="#c8a000" />
               <span className="text-xs font-black" style={{ color: "#9a7800" }}>{currency}</span>
             </div>
           </div>
@@ -103,8 +104,9 @@ export default function HomeScreen() {
 
           {/* 목표 텍스트 */}
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-bold mb-0.5" style={{ color: "#e07820" }}>
-              ◎ 목표 ({habits.length}개)
+            <div className="flex items-center gap-1 text-[10px] font-bold mb-0.5" style={{ color: "#e07820" }}>
+              <Target size={11} strokeWidth={2.2} />
+              목표 ({habits.length}개)
             </div>
             {habits.slice(0, 2).map((h, i) => (
               <p key={i} className="text-[12px] font-bold leading-tight truncate" style={{ color: "#1a3a5c" }}>
@@ -142,7 +144,7 @@ export default function HomeScreen() {
             className="shrink-0 flex items-center gap-0.5 px-2 py-0.5 rounded-lg"
             style={{ background: `${staminaColor}18`, border: `1px solid ${staminaColor}44` }}
           >
-            <span className="text-[9px]">→</span>
+            <ChevronRight size={10} strokeWidth={2.5} />
             <span className="text-[10px] font-black" style={{ color: staminaColor }}>{levelName}</span>
           </div>
         </div>
@@ -199,7 +201,7 @@ export default function HomeScreen() {
                 }}
                 onClick={() => router.push("/verification")}
               >
-                <span className="text-[22px] leading-none">✦</span>
+                <Sparkles size={22} color="#fff" />
                 <span className="text-[13px] font-black text-white">인증하기</span>
               </button>
 
@@ -209,7 +211,7 @@ export default function HomeScreen() {
                   style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 3px 10px rgba(58,144,212,0.32)" }}
                   onClick={() => router.push("/chat")}
                 >
-                  <span className="text-base">♡</span>
+                  <Heart size={16} color="#fff" />
                   <span className="text-[12px] font-black text-white">대화</span>
                 </button>
                 <button
@@ -217,7 +219,7 @@ export default function HomeScreen() {
                   style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 3px 10px rgba(139,112,232,0.32)" }}
                   onClick={() => router.push(nextDay())}
                 >
-                  <span className="text-base">→</span>
+                  <ChevronRight size={18} color="#fff" />
                   <span className="text-[12px] font-black text-white">다음날</span>
                 </button>
               </div>
@@ -229,7 +231,7 @@ export default function HomeScreen() {
                 style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 4px 14px rgba(58,144,212,0.35)" }}
                 onClick={() => router.push("/chat")}
               >
-                <span className="text-xl">♡</span>
+                <Heart size={22} color="#fff" />
                 <span className="text-[13px] font-black text-white">대화하기</span>
               </button>
               <button
@@ -237,7 +239,7 @@ export default function HomeScreen() {
                 style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 4px 14px rgba(139,112,232,0.35)" }}
                 onClick={() => router.push(nextDay())}
               >
-                <span className="text-xl">→</span>
+                <ChevronRight size={22} color="#fff" />
                 <span className="text-[13px] font-black text-white">다음 날</span>
               </button>
             </div>

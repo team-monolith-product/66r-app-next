@@ -6,6 +6,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import SparkleEffect from "@/components/ui/SparkleEffect";
+import { ImagePlus, X, ArrowUp } from "lucide-react";
 
 const OPENING_MESSAGES: Record<string, (habits: string[]) => string> = {
   tsundere: (h) => `오늘 ${h[0]} 했어? 증명해봐. 말만으론 안 믿어.`,
@@ -300,10 +301,10 @@ export default function VerificationScreen() {
               />
               <button
                 onClick={() => setAttachedPhoto(null)}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
                 style={{ background: "rgba(0,0,0,0.6)", color: "#fff" }}
               >
-                ✕
+                <X size={10} strokeWidth={3} />
               </button>
             </div>
           </div>
@@ -372,13 +373,14 @@ export default function VerificationScreen() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
-              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 text-lg"
+              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95"
               style={{
                 background: attachedPhoto ? `${charColor}22` : "rgba(0,0,0,0.05)",
                 border: `1.5px solid ${attachedPhoto ? charColor : charColor + "33"}`,
+                color: attachedPhoto ? charColor : "var(--text-secondary)",
               }}
             >
-              📷
+              <ImagePlus size={20} strokeWidth={1.8} />
             </button>
 
             {/* Text input */}
@@ -415,7 +417,7 @@ export default function VerificationScreen() {
                 transition: "all 0.18s ease",
               }}
             >
-              ↑
+              <ArrowUp size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>

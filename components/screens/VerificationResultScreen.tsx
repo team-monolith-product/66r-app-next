@@ -6,6 +6,7 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
+import { Check, X, Flame, Sparkles, Heart } from "lucide-react";
 
 export default function VerificationResultScreen() {
   const router = useRouter();
@@ -52,14 +53,14 @@ export default function VerificationResultScreen() {
               boxShadow: `0 0 40px ${resultColor}33`,
             }}
           >
-            {isSuccess ? "✓" : "✗"}
+            {isSuccess ? <Check size={36} strokeWidth={3} /> : <X size={36} strokeWidth={3} />}
           </div>
           <div className="text-center">
             <h2 className="text-2xl font-black" style={{ color: resultColor }}>
               {isSuccess ? "인증 성공!" : "인증 실패"}
             </h2>
             {isSuccess && streak > 1 && (
-              <p className="text-sm mt-1" style={{ color: "#7a9bb5" }}>🔥 {streak}일 연속 달성!</p>
+              <p className="flex items-center justify-center gap-1 text-sm mt-1" style={{ color: "#7a9bb5" }}><Flame size={14} color="#ff8040" /> {streak}일 연속 달성!</p>
             )}
           </div>
         </div>
@@ -101,7 +102,7 @@ export default function VerificationResultScreen() {
                     border: `1px solid ${r.verified ? "#4cca7a66" : "#f8717166"}`,
                   }}
                 >
-                  {r.verified ? "✓" : "✗"}
+                  {r.verified ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={3} />}
                 </span>
                 <span className="text-sm" style={{ color: "#1a3a5c" }}>
                   {r.habit}
@@ -140,7 +141,7 @@ export default function VerificationResultScreen() {
               <>
                 <div className="w-px" style={{ background: "rgba(160,210,240,0.5)" }} />
                 <div>
-                  <div className="font-black text-lg" style={{ color: "#a78bfa" }}>✦</div>
+                  <div className="flex justify-center"><Sparkles size={20} color="#a78bfa" /></div>
                   <div className="text-[10px]" style={{ color: "#7a9bb5" }}>스토리</div>
                 </div>
               </>
@@ -153,7 +154,7 @@ export default function VerificationResultScreen() {
       <div className="px-6 pb-10 pt-3 z-10 flex flex-col gap-2">
         {isSuccess ? (
           <GameButton fullWidth size="lg" onClick={() => router.push("/chat")}>
-            ♡ 대화하기
+            <Heart size={16} className="inline mr-1.5" /> 대화하기
           </GameButton>
         ) : (
           <GameButton fullWidth size="lg" onClick={() => router.push("/verification")}>

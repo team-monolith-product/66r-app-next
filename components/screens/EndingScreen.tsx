@@ -7,13 +7,15 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
+import { Crown, Star, Flame, CheckCircle, TrendingUp, Heart, BarChart2 } from "lucide-react";
+import type { ReactNode } from "react";
 
 /* ── 엔딩 메타 ─────────────────────────────────────── */
-const ENDING_META = {
-  best:   { title: "베스트 엔딩", subtitle: "BEST ENDING",   grade: "S", gradeColor: "#f0a020", bgGlow: "rgba(240,160,32,0.18)",  icon: "♛", description: "66일을 완벽하게 마쳤습니다.\n당신의 습관은 이제 삶의 일부가 되었어요." },
-  normal: { title: "노멀 엔딩",   subtitle: "NORMAL ENDING",  grade: "A", gradeColor: "#3a90d4", bgGlow: "rgba(58,144,212,0.13)", icon: "✦", description: "66일을 마쳤습니다.\n완벽하진 않았지만, 충분히 잘 해냈어요." },
-  bad:    { title: "배드 엔딩",   subtitle: "BAD ENDING",     grade: "C", gradeColor: "#f472b6", bgGlow: "rgba(244,114,182,0.10)", icon: "✧", description: "66일이 끝났습니다.\n이번엔 힘들었지만, 다음엔 다를 거예요." },
-} as const;
+const ENDING_META: Record<string, { title: string; subtitle: string; grade: string; gradeColor: string; bgGlow: string; icon: ReactNode; description: string }> = {
+  best:   { title: "베스트 엔딩", subtitle: "BEST ENDING",   grade: "S", gradeColor: "#f0a020", bgGlow: "rgba(240,160,32,0.18)",  icon: <Crown size={22} />,  description: "66일을 완벽하게 마쳤습니다.\n당신의 습관은 이제 삶의 일부가 되었어요." },
+  normal: { title: "노멀 엔딩",   subtitle: "NORMAL ENDING",  grade: "A", gradeColor: "#3a90d4", bgGlow: "rgba(58,144,212,0.13)", icon: <Star size={22} />,   description: "66일을 마쳤습니다.\n완벽하진 않았지만, 충분히 잘 해냈어요." },
+  bad:    { title: "배드 엔딩",   subtitle: "BAD ENDING",     grade: "C", gradeColor: "#f472b6", bgGlow: "rgba(244,114,182,0.10)", icon: <Star size={22} strokeDasharray="4 2" />, description: "66일이 끝났습니다.\n이번엔 힘들었지만, 다음엔 다를 거예요." },
+};
 
 /* ── 비주얼 노벨 스크립트 ───────────────────────────── */
 type Script = { name: string; text: string; mood?: "neutral"|"happy"|"shy"|"sad" }[];
@@ -301,7 +303,7 @@ export default function EndingScreen() {
           className="w-24 h-24 rounded-full flex flex-col items-center justify-center font-black text-3xl"
           style={{ background: `${meta.gradeColor}18`, border: `2px solid ${meta.gradeColor}66`, color: meta.gradeColor, boxShadow: `0 0 40px ${meta.gradeColor}33` }}
         >
-          <span className="text-lg opacity-70">{meta.icon}</span>
+          <span className="opacity-70">{meta.icon}</span>
           <span>{meta.grade}</span>
         </div>
 
@@ -315,15 +317,15 @@ export default function EndingScreen() {
         {/* 종합 지표 */}
         <div className="w-full" style={PANEL}>
           <div className="px-5 py-4">
-            <h3 className="text-xs font-black tracking-widest uppercase mb-4 text-center" style={{ color: "#7a9bb5" }}>📊 최종 기록</h3>
+            <h3 className="flex items-center justify-center gap-1.5 text-xs font-black tracking-widest uppercase mb-4 text-center" style={{ color: "#7a9bb5" }}><BarChart2 size={13} /> 최종 기록</h3>
 
             {/* 메인 스탯 4개 */}
             <div className="grid grid-cols-2 gap-3 mb-3">
               {[
-                { icon: "✅", label: "완료한 날",   value: `${completedDays.length}일`,      sub: "/ 66일",      color: "#4cca7a" },
-                { icon: "📈", label: "달성률",       value: `${completionRate}%`,             sub: "전체 기간",    color: meta.gradeColor },
-                { icon: "🔥", label: "최고 연속",    value: `${streak}일`,                    sub: "스트릭",       color: "#ff8040" },
-                { icon: "♡",  label: "최종 호감도",  value: `${affection}`,                   sub: "/ 660",       color: character?.color ?? "#a78bfa" },
+                { icon: <CheckCircle size={20} />, label: "완료한 날",   value: `${completedDays.length}일`, sub: "/ 66일",    color: "#4cca7a" },
+                { icon: <TrendingUp size={20} />,  label: "달성률",       value: `${completionRate}%`,        sub: "전체 기간",  color: meta.gradeColor },
+                { icon: <Flame size={20} />,       label: "최고 연속",    value: `${streak}일`,               sub: "스트릭",     color: "#ff8040" },
+                { icon: <Heart size={20} />,       label: "최종 호감도",  value: `${affection}`,              sub: "/ 660",     color: character?.color ?? "#a78bfa" },
               ].map((s) => (
                 <div
                   key={s.label}
@@ -369,7 +371,7 @@ export default function EndingScreen() {
                 boxShadow: `0 4px 24px ${character?.color ?? "#3a90d4"}44`,
               }}
             >
-              ♡ 연인 모드 보기
+              <Heart size={16} className="inline mr-1.5" /> 연인 모드 보기
             </GameButton>
           )}
           <GameButton

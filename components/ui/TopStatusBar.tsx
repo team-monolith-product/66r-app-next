@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
+import { Flame, Sparkles } from "lucide-react";
 
 export default function TopStatusBar() {
   const dayCount = useAppStore((s) => s.dayCount);
@@ -25,7 +26,7 @@ export default function TopStatusBar() {
       <div className="flex flex-col items-center min-w-[56px]">
         <span className="text-[10px] text-[var(--text-secondary)] tracking-widest uppercase">Streak</span>
         <div className="flex items-center gap-1">
-          <span className="text-base">🔥</span>
+          <Flame size={16} color="#ff8040" />
           <span className="font-bold text-[var(--gold-light)] text-base leading-tight">{streak}</span>
         </div>
       </div>
@@ -37,7 +38,7 @@ export default function TopStatusBar() {
       <div className="flex flex-col items-center min-w-[56px]">
         <span className="text-[10px] text-[var(--text-secondary)] tracking-widest uppercase">Coins</span>
         <div className="flex items-center gap-1">
-          <span className="text-sm">✦</span>
+          <Sparkles size={14} color="#c8a000" />
           <span className="font-bold text-[var(--gold)] text-base leading-tight">{currency}</span>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
 import GameButton from "@/components/ui/GameButton";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
+import { ChevronRight, X, Lock } from "lucide-react";
 
 interface StoryEpisode {
   id: number;
@@ -139,7 +140,10 @@ export default function StoryScreen() {
             className="mt-4 self-end text-sm flex items-center gap-1"
             style={{ color: "#7a9bb5" }}
           >
-            {lineIndex < lines.length - 1 ? "다음 ▶" : "닫기 ✕"}
+            {lineIndex < lines.length - 1
+              ? <><span>다음</span><ChevronRight size={15} /></>
+              : <><span>닫기</span><X size={14} /></>
+            }
           </button>
         </div>
       </div>
@@ -183,7 +187,7 @@ export default function StoryScreen() {
                       EP {story.id}
                     </span>
                     {!isUnlocked && (
-                      <span className="text-xs" style={{ color: "#7a9bb5" }}>🔒 Day {story.unlockDay}</span>
+                      <span className="flex items-center gap-1 text-xs" style={{ color: "#7a9bb5" }}><Lock size={11} /> Day {story.unlockDay}</span>
                     )}
                   </div>
                   <p className="font-bold text-sm" style={{ color: "#1a3a5c" }}>{story.title}</p>

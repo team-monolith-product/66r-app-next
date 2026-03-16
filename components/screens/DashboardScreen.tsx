@@ -6,16 +6,22 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
 import AffectionBar from "@/components/ui/AffectionBar";
 import DayCalendar from "@/components/ui/DayCalendar";
+import {
+  Dumbbell, BookOpen, Wind, Droplets, Sunrise, PenLine, Palette, Leaf,
+  Calendar, CheckCircle, Flame, TrendingUp, Sparkles, Heart,
+  Check, X,
+} from "lucide-react";
+import type { ReactNode } from "react";
 
 const PRESETS = [
-  { icon: "🏃", label: "운동하기" },
-  { icon: "📚", label: "독서하기" },
-  { icon: "🧘", label: "명상하기" },
-  { icon: "💧", label: "물 2L 마시기" },
-  { icon: "🌅", label: "일찍 일어나기" },
-  { icon: "✍️", label: "일기 쓰기" },
-  { icon: "🎨", label: "그림 그리기" },
-  { icon: "🌿", label: "산책하기" },
+  { icon: <Dumbbell size={13} />, label: "운동하기" },
+  { icon: <BookOpen size={13} />, label: "독서하기" },
+  { icon: <Wind size={13} />, label: "명상하기" },
+  { icon: <Droplets size={13} />, label: "물 2L 마시기" },
+  { icon: <Sunrise size={13} />, label: "일찍 일어나기" },
+  { icon: <PenLine size={13} />, label: "일기 쓰기" },
+  { icon: <Palette size={13} />, label: "그림 그리기" },
+  { icon: <Leaf size={13} />, label: "산책하기" },
 ];
 
 const MAX_HABITS = 5;
@@ -41,13 +47,13 @@ export default function DashboardScreen() {
   const completionRate = Math.round((completedDays.length / Math.max(dayCount - 1, 1)) * 100);
   const level = Math.floor(affection / 66) + 1;
 
-  const stats = [
-    { label: "진행 일수",   value: `${dayCount}/66`,         icon: "◈" },
-    { label: "완료 일수",   value: `${completedDays.length}일`, icon: "✓" },
-    { label: "현재 스트릭", value: `${streak}일`,              icon: "🔥" },
-    { label: "달성률",      value: `${completionRate}%`,       icon: "★" },
-    { label: "보유 코인",   value: `${currency}`,              icon: "✦" },
-    { label: "호감도 레벨", value: `Lv.${level}`,              icon: "♡" },
+  const stats: { label: string; value: string; icon: ReactNode }[] = [
+    { label: "진행 일수",   value: `${dayCount}/66`,            icon: <Calendar size={18} /> },
+    { label: "완료 일수",   value: `${completedDays.length}일`, icon: <CheckCircle size={18} /> },
+    { label: "현재 스트릭", value: `${streak}일`,               icon: <Flame size={18} /> },
+    { label: "달성률",      value: `${completionRate}%`,        icon: <TrendingUp size={18} /> },
+    { label: "보유 코인",   value: `${currency}`,               icon: <Sparkles size={18} /> },
+    { label: "호감도 레벨", value: `Lv.${level}`,               icon: <Heart size={18} /> },
   ];
 
   const removeHabit = (habit: string) => {
@@ -125,7 +131,7 @@ export default function DashboardScreen() {
                   border: `1px solid ${character?.color ?? "#4aacef"}44`,
                 }}
               >
-                {addOpen ? "✕ 닫기" : "+ 추가"}
+                {addOpen ? <><X size={11} strokeWidth={2.5} /> 닫기</> : "+ 추가"}
               </button>
             )}
           </div>
@@ -146,7 +152,7 @@ export default function DashboardScreen() {
                   <div key={i} className="flex items-center gap-3 px-4 py-3">
                     {/* 체크 상태 */}
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black"
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                       style={
                         checked
                           ? {
@@ -161,7 +167,7 @@ export default function DashboardScreen() {
                             }
                       }
                     >
-                      ✓
+                      <Check size={12} strokeWidth={3} />
                     </div>
 
                     {/* 습관 이름 or 편집 인풋 */}
@@ -201,30 +207,30 @@ export default function DashboardScreen() {
                       <div className="flex gap-1 flex-shrink-0">
                         <button
                           onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black"
+                          className="w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ background: `${character?.color ?? "#4aacef"}22`, color: character?.color ?? "#4aacef" }}
                         >
-                          ✓
+                          <Check size={12} strokeWidth={3} />
                         </button>
                         <button
                           onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px]"
+                          className="w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ background: "rgba(0,0,0,0.06)", color: "var(--text-secondary)" }}
                         >
-                          ✕
+                          <X size={12} strokeWidth={2.5} />
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={() => removeHabit(habit)}
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] transition-all active:scale-90 flex-shrink-0"
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 flex-shrink-0"
                         style={{
                           background: "rgba(239,100,100,0.08)",
                           color: "#f87171",
                           border: "1px solid rgba(239,100,100,0.2)",
                         }}
                       >
-                        ✕
+                        <X size={12} strokeWidth={2.5} />
                       </button>
                     )}
                   </div>
@@ -297,7 +303,7 @@ export default function DashboardScreen() {
         <div className="grid grid-cols-3 gap-2">
           {stats.map((s) => (
             <div key={s.label} className="glass-panel p-3 rounded-2xl text-center">
-              <div className="text-lg mb-1" style={{ color: character?.color ?? "var(--gold)" }}>
+              <div className="flex justify-center mb-1" style={{ color: character?.color ?? "var(--gold)" }}>
                 {s.icon}
               </div>
               <div className="font-bold text-base text-[var(--text-primary)]">{s.value}</div>
@@ -322,7 +328,7 @@ export default function DashboardScreen() {
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <div
-                    className="w-full aspect-square rounded-lg flex items-center justify-center text-xs"
+                    className="w-full aspect-square rounded-lg flex items-center justify-center"
                     style={{
                       background: done
                         ? `${character?.color ?? "#3a90d4"}44`
@@ -332,7 +338,12 @@ export default function DashboardScreen() {
                       border: done ? `1px solid ${character?.color ?? "#3a90d4"}66` : "none",
                     }}
                   >
-                    {done ? "✓" : past ? "✗" : "·"}
+                    {done
+                      ? <Check size={12} strokeWidth={3} style={{ color: character?.color ?? "#3a90d4" }} />
+                      : past
+                      ? <X size={12} strokeWidth={2.5} style={{ color: "#f87171" }} />
+                      : <span className="text-[10px]" style={{ color: "rgba(160,210,240,0.5)" }}>·</span>
+                    }
                   </div>
                   <span className="text-[9px] text-[var(--text-secondary)]">
                     {d > 0 ? `D${d}` : ""}
