@@ -24,9 +24,13 @@ export default function HomeScreen() {
 
   const progressPct   = Math.round((dayCount / 66) * 100);
   const daysLeft      = 66 - dayCount;
-  const affectionPct  = Math.round((affection / 660) * 100);
   const level         = getRelationshipLevel(affection);
   const levelName     = RELATIONSHIP_LEVELS.find((r) => r.level === level)?.name ?? "";
+  const currentThreshold = RELATIONSHIP_LEVELS.find((r) => r.level === level)?.threshold ?? 0;
+  const nextThreshold = RELATIONSHIP_LEVELS.find((r) => r.level === level + 1)?.threshold ?? 660;
+  const affectionPct  = level >= 8
+    ? 100
+    : Math.round(((affection - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
 
   const staminaGradient =
     affectionPct > 60

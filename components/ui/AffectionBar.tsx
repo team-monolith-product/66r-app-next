@@ -10,9 +10,13 @@ export default function AffectionBar({ showLabel = true }: AffectionBarProps) {
   const affection = useAppStore((s) => s.affection);
   const character = useAppStore((s) => s.character);
 
-  const percent = Math.round((affection / 660) * 100);
   const level   = getRelationshipLevel(affection);
   const levelName = RELATIONSHIP_LEVELS.find((r) => r.level === level)?.name ?? "";
+  const currentThreshold = RELATIONSHIP_LEVELS.find((r) => r.level === level)?.threshold ?? 0;
+  const nextThreshold = RELATIONSHIP_LEVELS.find((r) => r.level === level + 1)?.threshold ?? 660;
+  const percent = level >= 8
+    ? 100
+    : Math.round(((affection - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
 
   const accentColor = character?.color ?? "var(--gold)";
 
@@ -34,8 +38,8 @@ export default function AffectionBar({ showLabel = true }: AffectionBarProps) {
             </span>
           </div>
           <span className="text-xs text-[var(--text-secondary)]">
-            {affection}
-            <span className="opacity-50">/660</span>
+            {affection - currentThreshold}
+            <span className="opacity-50">/{nextThreshold - currentThreshold}</span>
           </span>
         </div>
       )}
