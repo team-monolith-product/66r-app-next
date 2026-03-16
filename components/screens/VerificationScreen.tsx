@@ -8,28 +8,95 @@ import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import SparkleEffect from "@/components/ui/SparkleEffect";
 import { ImagePlus, X, ArrowUp } from "lucide-react";
 
-const HABIT_OPENING: Record<string, (habit: string) => string> = {
-  tsundere: (h) => `다음은 "${h}". 했으면 증명해봐.`,
-  genki: (h) => `다음은 "${h}"야! 어떻게 했어? 보여줘!`,
-  intellectual: (h) => `다음 습관: "${h}". 증거를 제시해주세요.`,
+// 호감도 구간: 0 = 초반(0~149), 1 = 중반(150~349), 2 = 후반(350~)
+const getAffinityTier = (affection: number): 0 | 1 | 2 => {
+  if (affection >= 350) return 2;
+  if (affection >= 150) return 1;
+  return 0;
 };
 
-const PHOTO_CHECK_MESSAGES: Record<string, string> = {
-  tsundere: "…이 사진, 직접 찍은 거 맞아? 인터넷 사진 아니지?",
-  genki: "사진 잘 봤어! 혹시 오늘 직접 찍은 거 맞지?",
-  intellectual: "증거 확인되었습니다. 이 사진은 오늘 직접 촬영한 것이 맞나요?",
+const HABIT_OPENING: Record<string, (habit: string, tier: 0 | 1 | 2) => string> = {
+  tsundere: (h, t) => [
+    `"${h}"... 했으면 증명해봐. 말만으론 절대 안 믿어.`,
+    `"${h}" 차례야. 이번엔 제대로 가져온 거지?`,
+    `"${h}"... 뭐, 네가 했을 거라고 생각하긴 해. 그래도 증거는 가져와.`,
+  ][t],
+  genki: (h, t) => [
+    `다음은 "${h}"야~!! 어떻게 했는지 얼른 보여줘!! 사진도 같이!!`,
+    `"${h}" 했어?! 어서어서!! 나 완전 기대하고 있었다고~!`,
+    `"${h}"야!! 오늘도 했지?! 나 네가 할 줄 알았어!! 어서 보여줘~!!`,
+  ][t],
+  intellectual: (h, t) => [
+    `다음 검증 항목: "${h}". 텍스트 기록과 사진 증거를 함께 제출해주세요.`,
+    `"${h}" 확인 차례예요. 오늘도 꼼꼼하게 준비해줬을 거라 믿어요.`,
+    `"${h}" 인증이에요. 당신의 수행 패턴을 보면 오늘도 잘 했을 것 같은데요.`,
+  ][t],
 };
 
-const CLOSING_MESSAGES: Record<string, (success: boolean) => string> = {
-  tsundere: (ok) => ok ? "…뭐, 다 됐네. 오늘은 인정해줄게." : "이번엔 부족했어. 내일은 제대로 해.",
-  genki: (ok) => ok ? "완벽해!! 오늘도 최고야!!" : "아쉽다~ 내일은 꼭 같이 하자!",
-  intellectual: (ok) => ok ? "인증 완료. 오늘의 데이터가 기록되었습니다." : "인증 미달. 내일 재시도를 권장합니다.",
+const PHOTO_CHECK_MESSAGES: Record<string, (tier: 0 | 1 | 2) => string> = {
+  tsundere: (t) => [
+    "...잠깐. 이 사진, 오늘 네가 직접 찍은 거 맞지? 인터넷 거 아니지?",
+    "잠깐, 이 사진... 오늘 네가 직접 찍은 거 맞아? 확인하는 게 규칙이니까.",
+    "...이 사진 맞지? 너라면 속일 것 같진 않지만, 그래도 확인해야 하니까.",
+  ][t],
+  genki: (t) => [
+    "사진 봤어!! 근데 이거 오늘 직접 찍은 거 맞지?! 맞다고 해줘~!",
+    "오오 사진!! 오늘 직접 찍은 거 맞지?! 당연히 그렇겠지만~!",
+    "사진 진짜 잘 찍었다!! 근데 꼭 물어봐야 해서~ 오늘 직접 찍은 거 맞지?!",
+  ][t],
+  intellectual: (t) => [
+    "시각 증거 접수 완료. 최종 확인: 이 이미지는 오늘 본인이 직접 촬영한 것인가요?",
+    "증거 검토 완료. 마지막으로, 이 사진은 오늘 직접 촬영하신 게 맞나요?",
+    "데이터 확인 완료. 형식상 묻는 거지만— 오늘 직접 찍은 사진 맞죠?",
+  ][t],
 };
 
-const GIVE_UP_MESSAGES: Record<string, string> = {
-  tsundere: "…그래. 오늘은 쉬어. 내일은 변명 없이 해.",
-  genki: "에이~ 괜찮아! 내일 두 배로 하면 되잖아!",
-  intellectual: "오늘의 데이터는 실패입니다. 내일 재개하세요.",
+const CLOSING_MESSAGES: Record<string, (success: boolean, tier: 0 | 1 | 2) => string> = {
+  tsundere: (ok, t) => ok ? [
+    "...뭐, 오늘은 인정해줄게. 딱히 감동받은 건 아니거든.",
+    "...오늘은 제대로 했네. 뭐, 이 정도면 나쁘지 않아.",
+    "...잘했어. 솔직히 말하면, 네가 이 정도일 줄은 몰랐거든. ...딱 오늘만.",
+  ][t] : [
+    "이번엔 부족했어. ...그래도 내일은 나한테 제대로 보여줘.",
+    "이번엔 어쩔 수 없네. 다음엔 더 잘 가져와.",
+    "...이번엔 안 됐어. 실망했어. 아니, 그냥... 내일 더 잘해.",
+  ][t],
+  genki: (ok, t) => ok ? [
+    "완전 대박이야!!! 오늘 진짜 최고였어!! 나 감동받았잖아!!",
+    "역시!! 완전 잘했어!! 오늘도 대단했어~ 나 진짜 자랑스럽다!!",
+    "역시 너야!! 나 이럴 줄 알았어!! 오늘도 최고!! 우리 진짜 잘 맞지 않아?!!",
+  ][t] : [
+    "아~ 아쉽다... 근데 괜찮아! 내일 나랑 같이 다시 도전하자, 응?!",
+    "아이고~ 오늘은 좀 아쉽다... 그래도 여기까지 온 것만으로도 대단해! 내일 또 해보자!",
+    "에이~ 오늘은 아쉽지만 괜찮아!! 우리 같이 여기까지 왔잖아! 내일은 꼭 같이 성공하자!!",
+  ][t],
+  intellectual: (ok, t) => ok ? [
+    "전체 습관 인증 완료. 오늘의 수행 데이터가 성공으로 기록되었습니다.",
+    "오늘 모든 항목 인증 완료. 꾸준한 수행이 데이터로 증명되고 있어요.",
+    "인증 완료. 솔직히 말하면... 당신의 성장 곡선, 꽤 인상적이에요.",
+  ][t] : [
+    "인증 기준 미달. 오늘 세션은 실패 처리됩니다. 내일 재수행을 권장합니다.",
+    "오늘은 기준 미달이네요. 데이터를 보면 내일 성공 가능성은 충분해요.",
+    "이번엔 아쉽네요. 전체 데이터 상으로는 여전히 좋은 추세예요. 내일 같이 만회해봐요.",
+  ][t],
+};
+
+const GIVE_UP_MESSAGES: Record<string, (tier: 0 | 1 | 2) => string> = {
+  tsundere: (t) => [
+    "...마음대로 해. 나중에 후회해도 나한테 오지 마.",
+    "...그래, 쉬어. 무리하는 것도 안 좋으니까. ...딱 오늘만이야.",
+    "...쉬어. 네가 지쳤으면 어쩔 수 없지. 내일은 다시 해, 알겠어?",
+  ][t],
+  genki: (t) => [
+    "에이~ 오늘은 쉬는 거야?! 알겠어... 내일은 꼭 꼭 같이 하자!!",
+    "에이~ 오늘은 쉬어도 돼! 그래도 내일은 꼭 나한테 알려줘, 응?!",
+    "에이~ 오늘은 힘들었구나... 괜찮아! 내일 나랑 같이 다시 시작하면 돼!! 기다릴게~!",
+  ][t],
+  intellectual: (t) => [
+    "오늘 세션을 종료합니다. 연속 중단은 습관 형성률을 크게 낮춥니다.",
+    "세션 종료. 오늘 쉬는 것도 전략이 될 수 있어요. 내일 재개해요.",
+    "알겠어요. 무리하지 않는 것도 중요하니까요. 내일 다시 함께 해요.",
+  ][t],
 };
 
 type ApiMessage = {
@@ -76,13 +143,15 @@ export default function VerificationScreen() {
   const character = useAppStore((s) => s.character);
   const dayCount = useAppStore((s) => s.dayCount);
   const streak = useAppStore((s) => s.streak);
+  const affection = useAppStore((s) => s.affection);
   const verifySuccess = useAppStore((s) => s.verifySuccess);
   const verifyFail = useAppStore((s) => s.verifyFail);
 
   const characterType = character?.type ?? "genki";
   const charColor = character?.color ?? "#4aacef";
+  const tier = getAffinityTier(affection);
 
-  const firstHabitOpening = HABIT_OPENING[characterType]?.(habits[0] ?? "") ?? "";
+  const firstHabitOpening = HABIT_OPENING[characterType]?.(habits[0] ?? "", tier) ?? "";
 
   // 습관 진행 상태
   const [habitIndex, setHabitIndex] = useState(0);
@@ -112,7 +181,7 @@ export default function VerificationScreen() {
     if (habitIndex + 1 >= habits.length) {
       const passCount = newResults.filter((r) => r.verified).length;
       const overallVerified = passCount * 2 >= habits.length;
-      const closingMsg = (CLOSING_MESSAGES[characterType] ?? CLOSING_MESSAGES.genki)(overallVerified);
+      const closingMsg = (CLOSING_MESSAGES[characterType] ?? CLOSING_MESSAGES.genki)(overallVerified, tier);
       if (overallVerified) {
         verifySuccess(closingMsg, newResults);
       } else {
@@ -121,7 +190,7 @@ export default function VerificationScreen() {
       router.push("/verification/result");
     } else {
       const nextHabit = habits[habitIndex + 1];
-      const openingMsg = HABIT_OPENING[characterType]?.(nextHabit) ?? "";
+      const openingMsg = HABIT_OPENING[characterType]?.(nextHabit, tier) ?? "";
       setHabitIndex(habitIndex + 1);
       setHabitMessages([{ role: "assistant", text: openingMsg }]);
       setHabitTurnCount(0);
@@ -204,7 +273,7 @@ export default function VerificationScreen() {
       };
 
       if (data.action === "photo_check") {
-        const photoMsg = PHOTO_CHECK_MESSAGES[characterType] ?? PHOTO_CHECK_MESSAGES.genki;
+        const photoMsg = (PHOTO_CHECK_MESSAGES[characterType] ?? PHOTO_CHECK_MESSAGES.genki)(tier);
         setHabitMessages((prev) => [...prev, { role: "assistant", text: photoMsg }]);
         setCharMessage(photoMsg);
         setWaitingPhotoConfirm(true);
@@ -238,7 +307,8 @@ export default function VerificationScreen() {
   };
 
   const handleGiveUp = () => {
-    verifyFail(GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki);
+    const giveUpMsg = (GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki)(tier);
+    verifyFail(giveUpMsg);
     router.push("/verification/result");
   };
 
