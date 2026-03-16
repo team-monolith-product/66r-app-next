@@ -8,7 +8,7 @@ import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
 import StoryUnlockModal from "@/components/ui/StoryUnlockModal";
-import { Check, X, Flame, Sparkles, Heart } from "lucide-react";
+import { Check, X, Flame, Sparkles } from "lucide-react";
 
 export default function VerificationResultScreen() {
   const router = useRouter();
@@ -173,17 +173,19 @@ export default function VerificationResultScreen() {
       {/* 버튼 — 하단 고정, 세로 스택 */}
       <div className="px-6 pb-10 pt-3 z-10 flex flex-col gap-2">
         {isSuccess ? (
-          <GameButton fullWidth size="lg" onClick={() => router.push("/chat")}>
-            <Heart size={16} className="inline mr-1.5" /> 대화하기
+          <GameButton fullWidth size="lg" onClick={() => router.push("/home")}>
+            홈으로
           </GameButton>
         ) : (
-          <GameButton fullWidth size="lg" onClick={() => router.push("/verification")}>
-            다시 시도
-          </GameButton>
+          <>
+            <GameButton fullWidth size="lg" onClick={() => router.push("/verification")}>
+              다시 시도
+            </GameButton>
+            <GameButton variant="ghost" fullWidth onClick={() => router.push("/home")}>
+              홈으로
+            </GameButton>
+          </>
         )}
-        <GameButton variant="ghost" fullWidth onClick={() => router.push("/home")}>
-          홈으로
-        </GameButton>
       </div>
     </div>
   );

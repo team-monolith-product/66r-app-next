@@ -15,7 +15,7 @@ export default function CharacterSelectScreen() {
 
   const handleConfirm = () => {
     setCharacter(selected);
-    debugPatch({ pendingStoryRead: 1 });
+    debugPatch({ pendingStoryRead: 1, unlockedStories: [1] });
     router.push("/home");
   };
 

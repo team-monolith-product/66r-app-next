@@ -8,7 +8,6 @@ const ALL_STORY_IDS = [1, 2, 3, 4, 5, 6];
 
 const SCREEN_ROUTES: Record<string, string> = {
   home: "/home",
-  chat: "/chat",
   story: "/story",
   dashboard: "/dashboard",
   verification: "/verification",

@@ -7,7 +7,7 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
 import StoryUnlockModal from "@/components/ui/StoryUnlockModal";
-import { Flame, Sparkles, Target, Heart, ChevronRight } from "lucide-react";
+import { Flame, Sparkles, Target, BookOpen, ChevronRight } from "lucide-react";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -232,15 +232,15 @@ export default function HomeScreen() {
               <div className="flex flex-col gap-2 w-[88px]">
                 <button
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-transform active:scale-95"
-                  style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 3px 10px rgba(58,144,212,0.32)" }}
-                  onClick={() => router.push("/chat")}
+                  style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 3px 10px rgba(139,112,232,0.32)" }}
+                  onClick={() => router.push("/story")}
                 >
-                  <Heart size={16} color="#fff" />
-                  <span className="text-[12px] font-black text-white">대화</span>
+                  <BookOpen size={16} color="#fff" />
+                  <span className="text-[12px] font-black text-white">스토리</span>
                 </button>
                 <button
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-transform active:scale-95"
-                  style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 3px 10px rgba(139,112,232,0.32)" }}
+                  style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 3px 10px rgba(58,144,212,0.32)" }}
                   onClick={() => router.push(nextDay())}
                 >
                   <ChevronRight size={18} color="#fff" />
@@ -252,11 +252,11 @@ export default function HomeScreen() {
             <div className="flex gap-2">
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl transition-transform active:scale-95"
-                style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 4px 14px rgba(58,144,212,0.35)" }}
-                onClick={() => router.push("/chat")}
+                style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 4px 14px rgba(139,112,232,0.35)" }}
+                onClick={() => router.push("/story")}
               >
-                <Heart size={22} color="#fff" />
-                <span className="text-[13px] font-black text-white">대화하기</span>
+                <BookOpen size={22} color="#fff" />
+                <span className="text-[13px] font-black text-white">스토리</span>
               </button>
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl transition-transform active:scale-95"
