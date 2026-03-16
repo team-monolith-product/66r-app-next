@@ -7,7 +7,7 @@ import GameButton from "@/components/ui/GameButton";
 
 export default function VerificationResultScreen() {
   const { state, dispatch } = useApp();
-  const { verificationSuccess, character, streak, dayCount, unlockedStories } = state;
+  const { verificationSuccess, verificationCharacterMessage, character, streak, dayCount, unlockedStories } = state;
 
   const isSuccess = verificationSuccess === true;
 
@@ -16,8 +16,9 @@ export default function VerificationResultScreen() {
 
   const successMessages = ["…오늘도 해냈네. 잘했어.", "역시 믿었어! 대단해!", "꾸준함이 가장 큰 힘이야."];
   const failMessages    = ["…뭐, 내일 다시 하면 돼.", "실망이야. 내일은 꼭 해.", "포기하지는 마. 다시 시작해."];
-  const messages = isSuccess ? successMessages : failMessages;
-  const message  = messages[Math.floor(Math.random() * messages.length)];
+  const fallbackMessages = isSuccess ? successMessages : failMessages;
+  const message = verificationCharacterMessage
+    ?? fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
 
   const successColor = "#4cca7a";
   const failColor    = "#f87171";

@@ -45,6 +45,7 @@ export interface AppState {
   currency: number;
   unlockedStories: number[];
   verificationSuccess: boolean | null;
+  verificationCharacterMessage: string | null;
   endingType: "best" | "normal" | "bad" | null;
 }
 
@@ -53,8 +54,8 @@ export type AppAction =
   | { type: "SET_HABITS"; habits: string[] }
   | { type: "SET_CHARACTER"; character: CharacterData }
   | { type: "TOGGLE_HABIT_CHECK"; index: number }
-  | { type: "VERIFY_SUCCESS" }
-  | { type: "VERIFY_FAIL" }
+  | { type: "VERIFY_SUCCESS"; message?: string }
+  | { type: "VERIFY_FAIL"; message?: string }
   | { type: "NEXT_DAY" }
   | { type: "ADD_AFFECTION"; amount: number }
   | { type: "UNLOCK_STORY"; storyId: number }
@@ -113,6 +114,7 @@ const initialState: AppState = {
   currency: 0,
   unlockedStories: [],
   verificationSuccess: null,
+  verificationCharacterMessage: null,
   endingType: null,
 };
 
@@ -153,6 +155,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         todayVerified: true,
         verificationSuccess: true,
+        verificationCharacterMessage: action.message ?? null,
         affection: newAffection,
         streak: state.streak + 1,
         currency: state.currency + 10,
@@ -166,6 +169,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         todayVerified: true,
         verificationSuccess: false,
+        verificationCharacterMessage: action.message ?? null,
         streak: 0,
         affection: Math.max(0, state.affection - 5),
       };
@@ -192,6 +196,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         todayVerified: false,
         todayHabitChecks: new Array(state.habits.length).fill(false),
         verificationSuccess: null,
+        verificationCharacterMessage: null,
         screen: "home",
       };
     }

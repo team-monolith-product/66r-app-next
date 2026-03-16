@@ -1,29 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useApp } from "@/components/AppContext";
 import GameButton from "@/components/ui/GameButton";
 import SparkleEffect from "@/components/ui/SparkleEffect";
+import CharacterDisplay from "@/components/ui/CharacterDisplay";
+
+const INITIAL_PROMPTS: Record<string, string> = {
+  tsundere: "오늘 습관 지켰어? 증명해봐.",
+  genki: "오늘 뭐 했는지 보여줘! 기대하고 있어!",
+  intellectual: "오늘의 습관 이행을 검증해드리겠습니다. 증거를 제시해주세요.",
+};
+
+const GIVE_UP_MESSAGES: Record<string, string> = {
+  tsundere: "…그래. 오늘은 쉬어. 내일은 변명 없이 해.",
+  genki: "에이~ 괜찮아! 내일 두 배로 하면 되잖아!",
+  intellectual: "오늘의 데이터는 실패입니다. 내일 재개하세요.",
+};
+
+type InputTab = "text" | "image";
 
 export default function VerificationScreen() {
   const { state, dispatch } = useApp();
-  const { habits, todayHabitChecks, character, dayCount } = state;
+  const { habits, character, dayCount } = state;
 
-  const [checking, setChecking] = useState(false);
+  const [tab, setTab] = useState<InputTab>("text");
+  const [textContent, setTextContent] = useState("");
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const allChecked = habits.length > 0 && todayHabitChecks.slice(0, habits.length).every(Boolean);
-  const checkedCount = todayHabitChecks.slice(0, habits.length).filter(Boolean).length;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (success: boolean) => {
-    setChecking(true);
-    setTimeout(() => {
-      if (success) {
-        dispatch({ type: "VERIFY_SUCCESS" });
-      } else {
-        dispatch({ type: "VERIFY_FAIL" });
+  const characterType = character?.type ?? "genki";
+  const prompt = INITIAL_PROMPTS[characterType] ?? INITIAL_PROMPTS.genki;
+  const canSubmit = tab === "text" ? textContent.trim().length > 0 : imageBase64 !== null;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageMediaType(file.type || "image/jpeg");
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setImagePreview(result);
+      // strip data:...;base64, prefix
+      const base64 = result.split(",")[1];
+      setImageBase64(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async () => {
+    if (!canSubmit || loading) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const input =
+        tab === "text"
+          ? { type: "text" as const, content: textContent }
+          : { type: "image" as const, base64: imageBase64!, mediaType: imageMediaType };
+
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          habits,
+          characterType: character?.type ?? "genki",
+          characterName: character?.name ?? "캐릭터",
+          input,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("API error");
       }
+
+      const { verified, message } = (await res.json()) as { verified: boolean; message: string };
+      dispatch({ type: verified ? "VERIFY_SUCCESS" : "VERIFY_FAIL", message });
       dispatch({ type: "SET_SCREEN", screen: "verificationResult" });
-    }, 800);
+    } catch {
+      setError("인증 요청에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGiveUp = () => {
+    const message = GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki;
+    dispatch({ type: "VERIFY_FAIL", message });
+    dispatch({ type: "SET_SCREEN", screen: "verificationResult" });
   };
 
   return (
@@ -42,84 +111,118 @@ export default function VerificationScreen() {
           <p className="text-xs text-[var(--text-secondary)] tracking-widest uppercase">Day {dayCount}</p>
           <h2 className="text-lg font-bold text-[var(--text-primary)]">오늘의 인증</h2>
         </div>
-        <div className="ml-auto text-sm font-bold" style={{ color: character?.color ?? "#4aacef" }}>
-          {checkedCount}/{habits.length}
-        </div>
       </div>
 
-      {/* 진행 바 */}
-      <div className="mx-5 mb-4 z-10">
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.07)" }}>
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: habits.length > 0 ? `${(checkedCount / habits.length) * 100}%` : "0%",
-              background: `linear-gradient(90deg, ${character?.color ?? "#4aacef"}, ${character?.accentColor ?? "#2563eb"})`,
-            }}
-          />
-        </div>
-      </div>
+      <div className="flex-1 overflow-y-auto hide-scrollbar px-5 z-10 flex flex-col gap-4 pb-4">
+        {/* 캐릭터 + 말풍선 */}
+        {character && (
+          <div className="flex items-end gap-3">
+            <CharacterDisplay character={character} size="sm" mood="neutral" />
+            <div
+              className="flex-1 px-4 py-3 rounded-2xl rounded-bl-sm"
+              style={{
+                background: "rgba(255,255,255,0.88)",
+                border: `1px solid ${character.color}44`,
+                boxShadow: `0 2px 12px ${character.color}18`,
+              }}
+            >
+              <p className="text-sm leading-relaxed" style={{ color: "#1a3a5c" }}>
+                {loading ? "판단 중…" : prompt}
+              </p>
+            </div>
+          </div>
+        )}
 
-      {/* 습관 체크리스트 */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar px-5 z-10 flex flex-col gap-3 pb-4">
-        {habits.map((habit, i) => {
-          const done = todayHabitChecks[i] ?? false;
-          return (
-            <button
+        {/* 습관 목록 */}
+        <div className="flex flex-wrap gap-2">
+          {habits.map((habit, i) => (
+            <span
               key={i}
-              onClick={() => !checking && dispatch({ type: "TOGGLE_HABIT_CHECK", index: i })}
-              className="w-full glass-panel p-4 rounded-2xl flex items-center gap-4 transition-all active:scale-[0.98]"
+              className="px-3 py-1 rounded-full text-xs font-bold"
+              style={{
+                background: `${character?.color ?? "#4aacef"}18`,
+                color: character?.color ?? "#4aacef",
+                border: `1px solid ${character?.color ?? "#4aacef"}44`,
+              }}
+            >
+              {habit}
+            </span>
+          ))}
+        </div>
+
+        {/* 탭 */}
+        <div
+          className="flex rounded-xl overflow-hidden"
+          style={{ background: "rgba(0,0,0,0.06)" }}
+        >
+          {(["text", "image"] as InputTab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className="flex-1 py-2 text-sm font-bold transition-all"
               style={
-                done
+                tab === t
                   ? {
-                      border: `1px solid ${character?.color ?? "#4aacef"}88`,
-                      background: `${character?.color ?? "#4aacef"}12`,
-                      boxShadow: `0 0 16px ${character?.color ?? "#4aacef"}22`,
+                      background: character?.color ?? "#4aacef",
+                      color: "#fff",
+                      borderRadius: "10px",
                     }
-                  : {}
+                  : { color: "var(--text-secondary)" }
               }
             >
-              {/* 체크 원 */}
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all"
-                style={
-                  done
-                    ? {
-                        background: character?.color ?? "#4aacef",
-                        boxShadow: `0 0 12px ${character?.color ?? "#4aacef"}55`,
-                      }
-                    : {
-                        border: `2px solid ${character?.color ?? "#4aacef"}44`,
-                        background: "rgba(255,255,255,0.5)",
-                      }
-                }
-              >
-                {done ? (
-                  <span className="text-white font-black text-lg">✓</span>
-                ) : (
-                  <span className="text-lg" style={{ color: `${character?.color ?? "#4aacef"}66` }}>○</span>
-                )}
-              </div>
-
-              {/* 습관 텍스트 */}
-              <div className="flex-1 text-left">
-                <p
-                  className="font-bold text-sm leading-tight"
-                  style={{
-                    color: done ? (character?.color ?? "#4aacef") : "var(--text-primary)",
-                    textDecoration: done ? "line-through" : "none",
-                    opacity: done ? 0.8 : 1,
-                  }}
-                >
-                  {habit}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-                  {done ? "완료!" : "탭해서 완료 처리"}
-                </p>
-              </div>
+              {t === "text" ? "📝 텍스트" : "📷 사진"}
             </button>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* 입력 영역 */}
+        {tab === "text" ? (
+          <textarea
+            className="w-full glass-panel rounded-2xl p-4 text-sm resize-none outline-none"
+            rows={5}
+            placeholder="오늘 어떻게 했는지 구체적으로 적어주세요..."
+            value={textContent}
+            onChange={(e) => setTextContent(e.target.value)}
+            style={{ color: "var(--text-primary)" }}
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full glass-panel rounded-2xl p-6 flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
+              style={{ border: `2px dashed ${character?.color ?? "#4aacef"}55` }}
+            >
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  className="w-full max-h-48 object-contain rounded-xl"
+                />
+              ) : (
+                <>
+                  <span className="text-3xl">📷</span>
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                    사진을 선택하세요
+                  </p>
+                </>
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </div>
+        )}
+
+        {/* 에러 */}
+        {error && (
+          <p className="text-xs text-center" style={{ color: "#f87171" }}>
+            {error}
+          </p>
+        )}
       </div>
 
       {/* 하단 버튼 */}
@@ -127,14 +230,15 @@ export default function VerificationScreen() {
         <GameButton
           fullWidth
           size="lg"
-          disabled={!allChecked || checking}
-          onClick={() => handleSubmit(true)}
-          style={{ opacity: allChecked ? 1 : 0.4 }}
+          disabled={!canSubmit || loading}
+          onClick={handleSubmit}
+          style={{ opacity: canSubmit && !loading ? 1 : 0.4 }}
         >
-          {allChecked ? "✓ 모든 습관 인증 완료!" : `${habits.length - checkedCount}개 남았어요`}
+          {loading ? "판단 중…" : "제출하기"}
         </GameButton>
         <button
-          onClick={() => !checking && handleSubmit(false)}
+          onClick={handleGiveUp}
+          disabled={loading}
           className="text-xs text-center py-2"
           style={{ color: "var(--text-secondary)", opacity: 0.6 }}
         >
