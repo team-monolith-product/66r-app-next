@@ -25,6 +25,8 @@ export default function DashboardScreen() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [customInput, setCustomInput] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const completionRate = Math.round((completedDays.length / Math.max(dayCount - 1, 1)) * 100);
   const level = Math.floor(affection / 66) + 1;
@@ -42,6 +44,24 @@ export default function DashboardScreen() {
     const next = habits.filter((h) => h !== habit);
     dispatch({ type: "SET_HABITS", habits: next });
   };
+
+  const startEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditValue(habits[index]);
+  };
+
+  const confirmEdit = () => {
+    if (editingIndex === null) return;
+    const trimmed = editValue.trim();
+    if (!trimmed) { cancelEdit(); return; }
+    if (habits.includes(trimmed) && habits[editingIndex] !== trimmed) { cancelEdit(); return; }
+    const next = [...habits];
+    next[editingIndex] = trimmed;
+    dispatch({ type: "SET_HABITS", habits: next });
+    setEditingIndex(null);
+  };
+
+  const cancelEdit = () => setEditingIndex(null);
 
   const addHabit = (label: string) => {
     const trimmed = label.trim();
@@ -111,8 +131,9 @@ export default function DashboardScreen() {
             <div className="flex flex-col divide-y" style={{ borderColor: "rgba(160,210,240,0.2)" }}>
               {habits.map((habit, i) => {
                 const checked = todayHabitChecks[i] ?? false;
+                const isEditing = editingIndex === i;
                 return (
-                  <div key={habit} className="flex items-center gap-3 px-4 py-3">
+                  <div key={i} className="flex items-center gap-3 px-4 py-3">
                     {/* 체크 상태 */}
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black"
@@ -133,30 +154,69 @@ export default function DashboardScreen() {
                       ✓
                     </div>
 
-                    {/* 습관 이름 */}
-                    <span
-                      className="flex-1 text-sm font-medium"
-                      style={{
-                        color: checked ? "var(--text-secondary)" : "var(--text-primary)",
-                        textDecoration: checked ? "line-through" : "none",
-                        opacity: checked ? 0.6 : 1,
-                      }}
-                    >
-                      {habit}
-                    </span>
+                    {/* 습관 이름 or 편집 인풋 */}
+                    {isEditing ? (
+                      <input
+                        autoFocus
+                        maxLength={20}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.nativeEvent.isComposing) confirmEdit();
+                          if (e.key === "Escape") cancelEdit();
+                        }}
+                        onBlur={confirmEdit}
+                        className="flex-1 text-sm font-medium bg-transparent outline-none border-b"
+                        style={{
+                          color: "var(--text-primary)",
+                          borderColor: character?.color ?? "#4aacef",
+                        }}
+                      />
+                    ) : (
+                      <button
+                        className="flex-1 text-left text-sm font-medium"
+                        style={{
+                          color: checked ? "var(--text-secondary)" : "var(--text-primary)",
+                          textDecoration: checked ? "line-through" : "none",
+                          opacity: checked ? 0.6 : 1,
+                        }}
+                        onClick={() => startEdit(i)}
+                      >
+                        {habit}
+                      </button>
+                    )}
 
-                    {/* 삭제 버튼 */}
-                    <button
-                      onClick={() => removeHabit(habit)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] transition-all active:scale-90 flex-shrink-0"
-                      style={{
-                        background: "rgba(239,100,100,0.08)",
-                        color: "#f87171",
-                        border: "1px solid rgba(239,100,100,0.2)",
-                      }}
-                    >
-                      ✕
-                    </button>
+                    {/* 편집 중 확인/취소, 평소엔 삭제 */}
+                    {isEditing ? (
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button
+                          onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black"
+                          style={{ background: `${character?.color ?? "#4aacef"}22`, color: character?.color ?? "#4aacef" }}
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px]"
+                          style={{ background: "rgba(0,0,0,0.06)", color: "var(--text-secondary)" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => removeHabit(habit)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] transition-all active:scale-90 flex-shrink-0"
+                        style={{
+                          background: "rgba(239,100,100,0.08)",
+                          color: "#f87171",
+                          border: "1px solid rgba(239,100,100,0.2)",
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 );
               })}
