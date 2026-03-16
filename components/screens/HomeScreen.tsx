@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useAppStore, RELATIONSHIP_LEVELS, getRelationshipLevel } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
+import StoryUnlockModal from "@/components/ui/StoryUnlockModal";
 import { Flame, Sparkles, Target, Heart, ChevronRight } from "lucide-react";
 
 export default function HomeScreen() {
@@ -19,6 +21,17 @@ export default function HomeScreen() {
   const streak = useAppStore((s) => s.streak);
   const currency = useAppStore((s) => s.currency);
   const nextDay = useAppStore((s) => s.nextDay);
+  const pendingStoryRead = useAppStore((s) => s.pendingStoryRead);
+  const clearPendingStory = useAppStore((s) => s.clearPendingStory);
+
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
+  useEffect(() => {
+    if (!pendingStoryRead) return;
+    const timer = setTimeout(() => setShowUnlockModal(true), 500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!character) return null;
 
@@ -62,6 +75,14 @@ export default function HomeScreen() {
         background: "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 50%, #caeaf8 100%)",
       }}
     >
+      {showUnlockModal && pendingStoryRead && (
+        <StoryUnlockModal
+          episodeId={pendingStoryRead}
+          onRead={() => router.push("/story")}
+          onDismiss={() => { clearPendingStory(); setShowUnlockModal(false); }}
+        />
+      )}
+
       {/* ── 배경 캐릭터 ── */}
       <div className="absolute inset-0 flex items-end justify-center" style={{ zIndex: 1 }}>
         <CharacterDisplay character={character} size="hero" mood={todayVerified ? "happy" : "neutral"} />

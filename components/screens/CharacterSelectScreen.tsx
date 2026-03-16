@@ -10,10 +10,12 @@ import SparkleEffect from "@/components/ui/SparkleEffect";
 export default function CharacterSelectScreen() {
   const router = useRouter();
   const setCharacter = useAppStore((s) => s.setCharacter);
+  const debugPatch = useAppStore((s) => s.debugPatch);
   const [selected, setSelected] = useState<CharacterData>(CHARACTERS[0]);
 
   const handleConfirm = () => {
     setCharacter(selected);
+    debugPatch({ pendingStoryRead: 1 });
     router.push("/home");
   };
 
