@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useAppStore, getRelationshipLevel } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
+import StoryUnlockModal from "@/components/ui/StoryUnlockModal";
 import { Check, X, Flame, Sparkles, Heart } from "lucide-react";
 
 export default function VerificationResultScreen() {
@@ -19,11 +21,22 @@ export default function VerificationResultScreen() {
   const streak = useAppStore((s) => s.streak);
   const affection = useAppStore((s) => s.affection);
   const unlockedStories = useAppStore((s) => s.unlockedStories);
+  const pendingStoryRead = useAppStore((s) => s.pendingStoryRead);
+  const clearPendingStory = useAppStore((s) => s.clearPendingStory);
 
   const isSuccess = verificationSuccess === true;
 
   const currentLevel = getRelationshipLevel(affection);
   const hasNewStory = isSuccess && currentLevel > 1 && unlockedStories.includes(currentLevel);
+
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
+  useEffect(() => {
+    if (!pendingStoryRead) return;
+    const timer = setTimeout(() => setShowUnlockModal(true), 500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const successMessages = ["…오늘도 해냈네. 잘했어.", "역시 믿었어! 대단해!", "꾸준함이 가장 큰 힘이야."];
   const failMessages    = ["…뭐, 내일 다시 하면 돼.", "실망이야. 내일은 꼭 해.", "포기하지는 마. 다시 시작해."];
@@ -40,6 +53,13 @@ export default function VerificationResultScreen() {
       className="relative w-full h-full flex flex-col overflow-hidden"
       style={{ background: "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 55%, #caeaf8 100%)" }}
     >
+      {showUnlockModal && pendingStoryRead && (
+        <StoryUnlockModal
+          episodeId={pendingStoryRead}
+          onRead={() => router.push("/story")}
+          onDismiss={() => { clearPendingStory(); setShowUnlockModal(false); }}
+        />
+      )}
       {isSuccess && <SparkleBurst />}
 
       <div className="flex-1 flex flex-col justify-center gap-5 px-6 z-10 animate-slide-up">

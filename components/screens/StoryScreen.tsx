@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
@@ -100,10 +100,21 @@ export default function StoryScreen() {
 
   const unlockedStories = useAppStore((s) => s.unlockedStories);
   const character = useAppStore((s) => s.character);
+  const pendingStoryRead = useAppStore((s) => s.pendingStoryRead);
+  const clearPendingStory = useAppStore((s) => s.clearPendingStory);
   const [reading, setReading] = useState<StoryEpisode | null>(null);
   const [lineIndex, setLineIndex] = useState(0);
 
   const type = character?.type ?? "genki";
+
+  useEffect(() => {
+    if (pendingStoryRead) {
+      const story = STORIES.find((s) => s.id === pendingStoryRead);
+      if (story) { setReading(story); setLineIndex(0); }
+      clearPendingStory();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRead = (story: StoryEpisode) => { setReading(story); setLineIndex(0); };
   const handleNext = () => {

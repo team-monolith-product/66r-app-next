@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAppStore, CHARACTERS } from "@/store/useAppStore";
+import { useAppStore, CHARACTERS, RELATIONSHIP_LEVELS } from "@/store/useAppStore";
 
 const ALL_STORY_IDS = [1, 2, 3, 4, 5, 6];
 
@@ -152,6 +152,10 @@ export default function DebugPanel() {
 
           {/* 스토리 */}
           {section("스토리", <>
+            {btn("스토리용 호감도", () => {
+              const next = RELATIONSHIP_LEVELS.find((rl) => rl.threshold > affection);
+              if (next) debugPatch({ affection: next.threshold - 10 });
+            }, "#a78bfa")}
             {btn("전부 해금", () => debugPatch({ unlockedStories: ALL_STORY_IDS }), "#a78bfa")}
           </>)}
 

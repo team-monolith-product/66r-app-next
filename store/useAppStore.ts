@@ -28,6 +28,7 @@ export interface AppState {
   verificationCharacterMessage: string | null;
   habitVerificationResults: { habit: string; verified: boolean }[] | null;
   endingType: "best" | "normal" | "bad" | null;
+  pendingStoryRead: number | null;
 }
 
 export interface AppActions {
@@ -40,6 +41,7 @@ export interface AppActions {
   addAffection: (amount: number) => void;
   unlockStory: (storyId: number) => void;
   setEnding: (endingType: "best" | "normal" | "bad") => void;
+  clearPendingStory: () => void;
   reset: () => void;
   debugPatch: (patch: Partial<AppState>) => void;
 }
@@ -115,6 +117,7 @@ const initialState: AppState = {
   verificationCharacterMessage: null,
   habitVerificationResults: null,
   endingType: null,
+  pendingStoryRead: null,
 };
 
 /* ── Zustand Store ──────────────────────────────────── */
@@ -156,6 +159,7 @@ export const useAppStore = create<AppState & AppActions>()(
           currency: state.currency + 10,
           completedDays: newDays,
           unlockedStories: newStories,
+          pendingStoryRead: newLevel > oldLevel && !state.unlockedStories.includes(newLevel) ? newLevel : null,
         });
       },
 
@@ -199,6 +203,8 @@ export const useAppStore = create<AppState & AppActions>()(
         if (state.unlockedStories.includes(storyId)) return;
         set({ unlockedStories: [...state.unlockedStories, storyId] });
       },
+
+      clearPendingStory: () => set({ pendingStoryRead: null }),
 
       setEnding: (endingType) => set({ endingType }),
 
