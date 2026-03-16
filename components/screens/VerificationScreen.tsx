@@ -19,6 +19,7 @@ const GIVE_UP_MESSAGES: Record<string, string> = {
 };
 
 type InputTab = "text" | "image";
+type HabitImage = { base64: string; mediaType: string; preview: string } | null;
 
 export default function VerificationScreen() {
   const { state, dispatch } = useApp();
@@ -26,31 +27,44 @@ export default function VerificationScreen() {
 
   const [tab, setTab] = useState<InputTab>("text");
   const [textContent, setTextContent] = useState("");
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [habitImages, setHabitImages] = useState<HabitImage[]>(() => habits.map(() => null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingSlotRef = useRef<number>(-1);
 
   const characterType = character?.type ?? "genki";
   const prompt = INITIAL_PROMPTS[characterType] ?? INITIAL_PROMPTS.genki;
-  const canSubmit = tab === "text" ? textContent.trim().length > 0 : imageBase64 !== null;
+  const canSubmit =
+    tab === "text"
+      ? textContent.trim().length > 0
+      : habitImages.some((img) => img !== null);
+
+  const triggerFileInput = (slotIndex: number) => {
+    pendingSlotRef.current = slotIndex;
+    fileInputRef.current?.click();
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageMediaType(file.type || "image/jpeg");
+    const slot = pendingSlotRef.current;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setImagePreview(result);
-      // strip data:...;base64, prefix
-      const base64 = result.split(",")[1];
-      setImageBase64(base64);
+      const dataUrl = ev.target?.result as string;
+      setHabitImages((prev) => {
+        const next = [...prev];
+        next[slot] = {
+          base64: dataUrl.split(",")[1],
+          mediaType: file.type || "image/jpeg",
+          preview: dataUrl,
+        };
+        return next;
+      });
     };
     reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleSubmit = async () => {
@@ -62,7 +76,12 @@ export default function VerificationScreen() {
       const input =
         tab === "text"
           ? { type: "text" as const, content: textContent }
-          : { type: "image" as const, base64: imageBase64!, mediaType: imageMediaType };
+          : {
+              type: "image" as const,
+              habitImages: habitImages.map((img) =>
+                img ? { base64: img.base64, mediaType: img.mediaType } : null
+              ),
+            };
 
       const res = await fetch("/api/verify", {
         method: "POST",
@@ -75,12 +94,19 @@ export default function VerificationScreen() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("API error");
-      }
+      if (!res.ok) throw new Error("API error");
 
-      const { verified, message } = (await res.json()) as { verified: boolean; message: string };
-      dispatch({ type: verified ? "VERIFY_SUCCESS" : "VERIFY_FAIL", message });
+      const { habitResults, overallVerified, message } = (await res.json()) as {
+        habitResults: { habit: string; verified: boolean }[];
+        overallVerified: boolean;
+        message: string;
+      };
+
+      dispatch({
+        type: overallVerified ? "VERIFY_SUCCESS" : "VERIFY_FAIL",
+        message,
+        habitResults,
+      });
       dispatch({ type: "SET_SCREEN", screen: "verificationResult" });
     } catch {
       setError("인증 요청에 실패했어요. 다시 시도해주세요.");
@@ -133,23 +159,6 @@ export default function VerificationScreen() {
           </div>
         )}
 
-        {/* 습관 목록 */}
-        <div className="flex flex-wrap gap-2">
-          {habits.map((habit, i) => (
-            <span
-              key={i}
-              className="px-3 py-1 rounded-full text-xs font-bold"
-              style={{
-                background: `${character?.color ?? "#4aacef"}18`,
-                color: character?.color ?? "#4aacef",
-                border: `1px solid ${character?.color ?? "#4aacef"}44`,
-              }}
-            >
-              {habit}
-            </span>
-          ))}
-        </div>
-
         {/* 탭 */}
         <div
           className="flex rounded-xl overflow-hidden"
@@ -186,27 +195,72 @@ export default function VerificationScreen() {
             style={{ color: "var(--text-primary)" }}
           />
         ) : (
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full glass-panel rounded-2xl p-6 flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
-              style={{ border: `2px dashed ${character?.color ?? "#4aacef"}55` }}
-            >
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="preview"
-                  className="w-full max-h-48 object-contain rounded-xl"
-                />
-              ) : (
-                <>
-                  <span className="text-3xl">📷</span>
-                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                    사진을 선택하세요
-                  </p>
-                </>
-              )}
-            </button>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs px-1" style={{ color: "var(--text-secondary)" }}>
+              각 습관마다 사진 1장씩 업로드하세요. 반 이상 통과하면 인증 성공!
+            </p>
+            {habits.map((habit, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 glass-panel rounded-2xl p-3"
+              >
+                {/* 습관 태그 */}
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
+                  style={{
+                    background: `${character?.color ?? "#4aacef"}18`,
+                    color: character?.color ?? "#4aacef",
+                    border: `1px solid ${character?.color ?? "#4aacef"}44`,
+                    maxWidth: "100px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {habit}
+                </span>
+
+                {/* 사진 슬롯 */}
+                {habitImages[i] ? (
+                  <div className="relative w-16 h-16 flex-shrink-0">
+                    <img
+                      src={habitImages[i]!.preview}
+                      alt={`${habit} 사진`}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <button
+                      onClick={() =>
+                        setHabitImages((prev) => {
+                          const next = [...prev];
+                          next[i] = null;
+                          return next;
+                        })
+                      }
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                      style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => triggerFileInput(i)}
+                    className="w-16 h-16 rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 transition-all active:scale-95"
+                    style={{
+                      border: `2px dashed ${character?.color ?? "#4aacef"}55`,
+                      background: `${character?.color ?? "#4aacef"}08`,
+                    }}
+                  >
+                    <span className="text-lg">+</span>
+                  </button>
+                )}
+
+                {/* 상태 표시 */}
+                <span className="text-xs ml-auto" style={{ color: "var(--text-secondary)" }}>
+                  {habitImages[i] ? "✓ 업로드됨" : "미업로드"}
+                </span>
+              </div>
+            ))}
             <input
               ref={fileInputRef}
               type="file"

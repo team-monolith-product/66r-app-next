@@ -46,6 +46,7 @@ export interface AppState {
   unlockedStories: number[];
   verificationSuccess: boolean | null;
   verificationCharacterMessage: string | null;
+  habitVerificationResults: { habit: string; verified: boolean }[] | null;
   endingType: "best" | "normal" | "bad" | null;
 }
 
@@ -54,8 +55,8 @@ export type AppAction =
   | { type: "SET_HABITS"; habits: string[] }
   | { type: "SET_CHARACTER"; character: CharacterData }
   | { type: "TOGGLE_HABIT_CHECK"; index: number }
-  | { type: "VERIFY_SUCCESS"; message?: string }
-  | { type: "VERIFY_FAIL"; message?: string }
+  | { type: "VERIFY_SUCCESS"; message?: string; habitResults?: { habit: string; verified: boolean }[] }
+  | { type: "VERIFY_FAIL"; message?: string; habitResults?: { habit: string; verified: boolean }[] }
   | { type: "NEXT_DAY" }
   | { type: "ADD_AFFECTION"; amount: number }
   | { type: "UNLOCK_STORY"; storyId: number }
@@ -115,6 +116,7 @@ const initialState: AppState = {
   unlockedStories: [],
   verificationSuccess: null,
   verificationCharacterMessage: null,
+  habitVerificationResults: null,
   endingType: null,
 };
 
@@ -156,6 +158,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         todayVerified: true,
         verificationSuccess: true,
         verificationCharacterMessage: action.message ?? null,
+        habitVerificationResults: action.habitResults ?? null,
         affection: newAffection,
         streak: state.streak + 1,
         currency: state.currency + 10,
@@ -170,6 +173,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         todayVerified: true,
         verificationSuccess: false,
         verificationCharacterMessage: action.message ?? null,
+        habitVerificationResults: action.habitResults ?? null,
         streak: 0,
         affection: Math.max(0, state.affection - 5),
       };
@@ -197,6 +201,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         todayHabitChecks: new Array(state.habits.length).fill(false),
         verificationSuccess: null,
         verificationCharacterMessage: null,
+        habitVerificationResults: null,
         screen: "home",
       };
     }

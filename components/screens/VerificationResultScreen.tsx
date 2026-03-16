@@ -7,7 +7,7 @@ import GameButton from "@/components/ui/GameButton";
 
 export default function VerificationResultScreen() {
   const { state, dispatch } = useApp();
-  const { verificationSuccess, verificationCharacterMessage, character, streak, dayCount, unlockedStories } = state;
+  const { verificationSuccess, verificationCharacterMessage, habitVerificationResults, character, streak, dayCount, unlockedStories } = state;
 
   const isSuccess = verificationSuccess === true;
 
@@ -68,6 +68,42 @@ export default function VerificationResultScreen() {
             >
               <p className="text-sm leading-relaxed italic" style={{ color: "#1a3a5c" }}>"{message}"</p>
             </div>
+          </div>
+        )}
+
+        {/* 습관별 결과 */}
+        {habitVerificationResults && habitVerificationResults.length > 0 && (
+          <div
+            className="px-4 py-3 rounded-2xl flex flex-col gap-2"
+            style={{
+              background: "rgba(255,255,255,0.92)",
+              border: "1px solid rgba(160,210,240,0.55)",
+              boxShadow: "0 2px 12px rgba(90,150,200,0.10)",
+            }}
+          >
+            {habitVerificationResults.map((r, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0"
+                  style={{
+                    background: r.verified ? "#4cca7a22" : "#f8717122",
+                    color: r.verified ? "#4cca7a" : "#f87171",
+                    border: `1px solid ${r.verified ? "#4cca7a66" : "#f8717166"}`,
+                  }}
+                >
+                  {r.verified ? "✓" : "✗"}
+                </span>
+                <span className="text-sm" style={{ color: "#1a3a5c" }}>
+                  {r.habit}
+                </span>
+                <span
+                  className="ml-auto text-[11px] font-bold"
+                  style={{ color: r.verified ? "#4cca7a" : "#f87171" }}
+                >
+                  {r.verified ? "통과" : "미통과"}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
