@@ -1,7 +1,7 @@
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PERSONALITY_DESCRIPTIONS: Record<string, string> = {
   tsundere: "겉으로는 냉담하지만 속으로는 응원하는 츤데레. 짧고 퉁명스럽게 말하며, 성공 시 마지못해 인정하는 태도를 보인다.",
@@ -24,9 +24,6 @@ export async function POST(req: NextRequest) {
     const personalityDesc = PERSONALITY_DESCRIPTIONS[characterType] ?? PERSONALITY_DESCRIPTIONS.genki;
 
     // ── Step 1: 습관 판단 ──────────────────────────────────────────────────
-    // 이미지는 vision 모델(llama-4-scout), 텍스트는 한국어 강한 모델 사용
-    // 판단만 요청 (메시지 생성 없음)
-
     const judgmentSystemPrompt = `You are a habit verification judge.
 The user submitted evidence for these habits:
 ${habits.map((h, i) => `${i + 1}. ${h}`).join("\n")}
@@ -66,13 +63,8 @@ Respond ONLY with valid JSON, no explanation:
       judgmentUserContent = parts;
     }
 
-    const judgmentModel =
-      input.type === "image"
-        ? "meta-llama/llama-4-scout-17b-16e-instruct"
-        : "llama-3.3-70b-versatile";
-
-    const judgmentRes = await groq.chat.completions.create({
-      model: judgmentModel,
+    const judgmentRes = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: judgmentSystemPrompt },
         { role: "user", content: judgmentUserContent },
@@ -94,12 +86,11 @@ Respond ONLY with valid JSON, no explanation:
     const passCount = habitResults.filter((r) => r.verified).length;
     const overallVerified = passCount * 2 >= habits.length; // 반 이상
 
-    // ── Step 2: 캐릭터 메시지 생성 (한국어 강한 모델) ────────────────────
+    // ── Step 2: 캐릭터 메시지 생성 ────────────────────────────────────────
     const passedHabits = habitResults.filter((r) => r.verified).map((r) => r.habit);
     const failedHabits = habitResults.filter((r) => !r.verified).map((r) => r.habit);
 
-    const messageSystemPrompt = `/no_think
-당신은 ${characterName}입니다.
+    const messageSystemPrompt = `당신은 ${characterName}입니다.
 성격: ${personalityDesc}
 
 사용자의 오늘 습관 인증 결과:
@@ -111,8 +102,8 @@ Respond ONLY with valid JSON, no explanation:
 반드시 아래 JSON 형식으로만 응답하세요:
 {"message": "캐릭터 반응"}`;
 
-    const messageRes = await groq.chat.completions.create({
-      model: "qwen/qwen3-32b",
+    const messageRes = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: messageSystemPrompt }],
       max_tokens: 150,
       response_format: { type: "json_object" },
