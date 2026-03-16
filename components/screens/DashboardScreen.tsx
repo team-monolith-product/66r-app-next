@@ -180,7 +180,7 @@ export default function DashboardScreen() {
                   maxLength={20}
                   value={customInput}
                   onChange={(e) => setCustomInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCustomAdd()}
+                  onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleCustomAdd()}
                   className="flex-1 bg-transparent text-sm outline-none"
                   style={{ color: "var(--text-primary)" }}
                 />
