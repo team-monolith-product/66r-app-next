@@ -140,7 +140,7 @@ export const useAppStore = create<AppState & AppActions>()(
       verifyFail: (message, habitResults) => {
         const state = get();
         set({
-          todayVerified: true,
+          todayVerified: false,
           verificationSuccess: false,
           verificationCharacterMessage: message ?? null,
           habitVerificationResults: habitResults ?? null,

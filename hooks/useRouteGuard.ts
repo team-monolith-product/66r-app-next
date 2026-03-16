@@ -8,14 +8,14 @@ export function useRouteGuard(rule: "setup-complete" | "verification-done") {
   const router = useRouter();
   const habits = useAppStore((s) => s.habits);
   const character = useAppStore((s) => s.character);
-  const todayVerified = useAppStore((s) => s.todayVerified);
+  const verificationSuccess = useAppStore((s) => s.verificationSuccess);
 
   useEffect(() => {
     if (rule === "setup-complete" && (habits.length === 0 || !character)) {
       router.replace("/onboarding");
     }
-    if (rule === "verification-done" && !todayVerified) {
+    if (rule === "verification-done" && verificationSuccess === null) {
       router.replace("/home");
     }
-  }, [rule, habits, character, todayVerified, router]);
+  }, [rule, habits, character, verificationSuccess, router]);
 }
