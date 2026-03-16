@@ -82,9 +82,14 @@ Respond ONLY with valid JSON, no explanation:
     });
 
     const judgmentRaw = judgmentRes.choices[0].message.content!;
-    const { habitResults } = JSON.parse(judgmentRaw) as {
+    const parsed = JSON.parse(judgmentRaw) as {
       habitResults: { habit: string; verified: boolean }[];
     };
+    // LLM이 한국어 habit 이름을 깨뜨릴 수 있으므로 원본 habits 배열 이름을 사용
+    const habitResults = habits.map((habit, i) => ({
+      habit,
+      verified: parsed.habitResults[i]?.verified ?? false,
+    }));
 
     const passCount = habitResults.filter((r) => r.verified).length;
     const overallVerified = passCount * 2 >= habits.length; // 반 이상
@@ -93,7 +98,8 @@ Respond ONLY with valid JSON, no explanation:
     const passedHabits = habitResults.filter((r) => r.verified).map((r) => r.habit);
     const failedHabits = habitResults.filter((r) => !r.verified).map((r) => r.habit);
 
-    const messageSystemPrompt = `당신은 ${characterName}입니다.
+    const messageSystemPrompt = `/no_think
+당신은 ${characterName}입니다.
 성격: ${personalityDesc}
 
 사용자의 오늘 습관 인증 결과:
@@ -106,7 +112,7 @@ Respond ONLY with valid JSON, no explanation:
 {"message": "캐릭터 반응"}`;
 
     const messageRes = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "qwen/qwen3-32b",
       messages: [{ role: "user", content: messageSystemPrompt }],
       max_tokens: 150,
       response_format: { type: "json_object" },

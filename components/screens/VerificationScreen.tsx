@@ -61,15 +61,27 @@ export default function VerificationScreen() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setHabitImages((prev) => {
-        const next = [...prev];
-        next[slot] = {
-          base64: dataUrl.split(",")[1],
-          mediaType: file.type || "image/jpeg",
-          preview: dataUrl,
-        };
-        return next;
-      });
+      // Canvas로 리사이즈 + JPEG 변환 (HEIC/대용량 이미지 대응)
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1024;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.75);
+        setHabitImages((prev) => {
+          const next = [...prev];
+          next[slot] = {
+            base64: compressed.split(",")[1],
+            mediaType: "image/jpeg",
+            preview: compressed,
+          };
+          return next;
+        });
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
     e.target.value = "";
