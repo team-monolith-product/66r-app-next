@@ -244,16 +244,12 @@ export default function VerificationScreen() {
       </div>
 
       {/* ── Character Stage ─────────────────────────────────── */}
-      <div
-        className="absolute left-0 right-0 flex items-end justify-center z-10 pointer-events-none"
-        style={{ top: "60px", bottom: "290px" }}
-      >
+      <div className="absolute inset-0 flex items-end justify-center z-10 pointer-events-none">
         {character && (
           <CharacterDisplay
             character={character}
-            size="lg"
+            size="hero"
             mood={loading ? "neutral" : "happy"}
-            disableZoom
           />
         )}
       </div>
