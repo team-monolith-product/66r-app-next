@@ -7,7 +7,7 @@ import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
 import StoryUnlockModal from "@/components/ui/StoryUnlockModal";
-import { Flame, Sparkles, Target, BookOpen, ChevronRight } from "lucide-react";
+import { Flame, Sparkles, Target, BookOpen, ChevronRight, Shield } from "lucide-react";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function HomeScreen() {
   const streak = useAppStore((s) => s.streak);
   const currency = useAppStore((s) => s.currency);
   const nextDay = useAppStore((s) => s.nextDay);
+  const streakFreezes = useAppStore((s) => s.streakFreezes);
   const pendingStoryRead = useAppStore((s) => s.pendingStoryRead);
   const clearPendingStory = useAppStore((s) => s.clearPendingStory);
   const setEnding = useAppStore((s) => s.setEnding);
@@ -116,6 +117,12 @@ export default function HomeScreen() {
             <div className="flex items-center gap-1">
               <Flame size={15} color="#e06820" />
               <span className="text-xs font-black" style={{ color: "#e06820" }}>{streak}</span>
+              {streakFreezes > 0 && (
+                <div className="flex items-center gap-0.5 ml-0.5">
+                  <Shield size={11} color="#4aacef" />
+                  <span className="text-[10px] font-black" style={{ color: "#4aacef" }}>{streakFreezes}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-0.5">
               <Sparkles size={12} color="#c8a000" />

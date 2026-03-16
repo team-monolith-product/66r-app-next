@@ -122,6 +122,12 @@ export default function DebugPanel() {
             )}
           </>)}
 
+          {/* 코인 */}
+          {section("코인", <>
+            {btn("+100", () => debugPatch({ currency: currency + 100 }), "#c8a000")}
+            {btn("+500", () => debugPatch({ currency: currency + 500 }), "#c8a000")}
+          </>)}
+
           {/* 호감도 */}
           {section("호감도", <>
             {btn("+50", () => addAffection(50), "#4cca7a")}

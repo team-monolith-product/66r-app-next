@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAppStore, CHARACTERS, GACHA_COST, CHAR_PRICE, type GachaReward } from "@/store/useAppStore";
+import { useAppStore, CHARACTERS, GACHA_COST, CHAR_PRICE, STREAK_FREEZE_PRICE, type GachaReward } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import GameButton from "@/components/ui/GameButton";
 import BottomNav from "@/components/ui/BottomNav";
-import { Sparkles, Gift, Check } from "lucide-react";
+import { Sparkles, Gift, Check, Shield } from "lucide-react";
 
 const BG = "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 55%, #caeaf8 100%)";
 const PANEL = {
@@ -21,10 +21,11 @@ const RARITY = {
 };
 
 const POOL_INFO = [
-  { label: "호감도 +10", rarity: "common" as const, prob: "55%" },
-  { label: "코인 +50",   rarity: "common" as const, prob: "30%" },
-  { label: "호감도 +30", rarity: "rare"   as const, prob: "12%" },
-  { label: "코인 +200",  rarity: "epic"   as const, prob: "3%"  },
+  { label: "호감도 +10",    rarity: "common" as const, prob: "50%" },
+  { label: "코인 +50",      rarity: "common" as const, prob: "28%" },
+  { label: "스트릭 프리즈", rarity: "rare"   as const, prob: "12%" },
+  { label: "호감도 +30",    rarity: "rare"   as const, prob: "7%"  },
+  { label: "코인 +200",     rarity: "epic"   as const, prob: "3%"  },
 ];
 
 export default function ShopScreen() {
@@ -32,12 +33,14 @@ export default function ShopScreen() {
 
   const character      = useAppStore((s) => s.character);
   const currency       = useAppStore((s) => s.currency);
-  const ownedCharacters = useAppStore((s) => s.ownedCharacters);
-  const setCharacter   = useAppStore((s) => s.setCharacter);
+  const ownedCharacters   = useAppStore((s) => s.ownedCharacters);
+  const streakFreezes     = useAppStore((s) => s.streakFreezes);
+  const setCharacter      = useAppStore((s) => s.setCharacter);
   const purchaseCharacter = useAppStore((s) => s.purchaseCharacter);
-  const pullGacha      = useAppStore((s) => s.pullGacha);
+  const purchaseStreakFreeze = useAppStore((s) => s.purchaseStreakFreeze);
+  const pullGacha         = useAppStore((s) => s.pullGacha);
 
-  const [tab, setTab]             = useState<"character" | "gacha">("character");
+  const [tab, setTab]             = useState<"character" | "item" | "gacha">("character");
   const [pulling, setPulling]     = useState(false);
   const [result, setResult]       = useState<GachaReward | null>(null);
   const [resultKey, setResultKey] = useState(0);
@@ -81,18 +84,18 @@ export default function ShopScreen() {
 
       {/* 탭 */}
       <div className="flex gap-2 px-5 mb-4 z-10">
-        {(["character", "gacha"] as const).map((t) => (
+        {(["character", "item", "gacha"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className="px-5 py-1.5 rounded-full text-sm font-bold transition-all"
+            className="px-4 py-1.5 rounded-full text-sm font-bold transition-all"
             style={
               tab === t
                 ? { background: "#4aacef", color: "#fff", boxShadow: "0 2px 10px rgba(74,172,239,0.35)" }
                 : { background: "rgba(255,255,255,0.70)", color: "#7a9bb5", border: "1px solid rgba(160,210,240,0.5)" }
             }
           >
-            {t === "character" ? "캐릭터" : "뽑기"}
+            {t === "character" ? "캐릭터" : t === "item" ? "아이템" : "뽑기"}
           </button>
         ))}
       </div>
@@ -159,6 +162,55 @@ export default function ShopScreen() {
               </div>
             );
           })}
+
+          {errMsg && (
+            <p className="text-center text-sm font-bold animate-fade-in" style={{ color: "#f87171" }}>
+              {errMsg}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ── 아이템 탭 ── */}
+      {tab === "item" && (
+        <div className="flex-1 overflow-y-auto hide-scrollbar px-5 pb-24 flex flex-col gap-3 z-10">
+          {/* 스트릭 프리즈 */}
+          <div className="rounded-2xl overflow-hidden" style={PANEL}>
+            <div className="flex items-center gap-4 p-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(145deg, rgba(74,172,239,0.25), rgba(74,172,239,0.10))", border: "1.5px solid rgba(74,172,239,0.40)" }}
+              >
+                <Shield size={22} color="#4aacef" strokeWidth={1.8} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-black text-[15px]" style={{ color: "#1a3a5c" }}>스트릭 프리즈</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(74,172,239,0.12)", color: "#4aacef" }}>
+                    보유 {streakFreezes}개
+                  </span>
+                </div>
+                <p className="text-[11px] mb-3" style={{ color: "#7a9bb5" }}>
+                  인증 실패 시 스트릭을 1회 보호해줘요
+                </p>
+                <button
+                  onClick={() => {
+                    const ok = purchaseStreakFreeze();
+                    if (!ok) { setErrMsg("코인이 부족해요!"); setTimeout(() => setErrMsg(null), 2000); }
+                  }}
+                  disabled={currency < STREAK_FREEZE_PRICE}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full transition-all active:scale-95"
+                  style={
+                    currency >= STREAK_FREEZE_PRICE
+                      ? { background: "linear-gradient(135deg, #f0c040, #e0a820)", color: "#fff", boxShadow: "0 2px 8px rgba(240,192,64,0.40)" }
+                      : { background: "rgba(0,0,0,0.06)", color: "#aabdd0" }
+                  }
+                >
+                  <Sparkles size={11} /> {STREAK_FREEZE_PRICE} 코인
+                </button>
+              </div>
+            </div>
+          </div>
 
           {errMsg && (
             <p className="text-center text-sm font-bold animate-fade-in" style={{ color: "#f87171" }}>

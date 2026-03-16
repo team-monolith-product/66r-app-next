@@ -15,13 +15,14 @@ export interface CharacterData {
 
 export interface GachaReward {
   label: string;
-  type: "affection" | "coins";
+  type: "affection" | "coins" | "streak_freeze";
   amount: number;
   rarity: "common" | "rare" | "epic";
 }
 
 export const GACHA_COST = 30;
 export const CHAR_PRICE = 150;
+export const STREAK_FREEZE_PRICE = 80;
 
 export interface AppState {
   habits: string[];
@@ -41,6 +42,7 @@ export interface AppState {
   pendingStoryRead: number | null;
   badStoryUnlocked: boolean;
   ownedCharacters: string[];
+  streakFreezes: number;
 }
 
 export interface AppActions {
@@ -55,6 +57,7 @@ export interface AppActions {
   setEnding: (endingType: "best" | "normal" | "bad") => void;
   clearPendingStory: () => void;
   purchaseCharacter: (characterId: string) => boolean;
+  purchaseStreakFreeze: () => boolean;
   pullGacha: () => GachaReward | null;
   reset: () => void;
   debugPatch: (patch: Partial<AppState>) => void;
@@ -134,6 +137,7 @@ const initialState: AppState = {
   pendingStoryRead: null,
   badStoryUnlocked: false,
   ownedCharacters: [],
+  streakFreezes: 0,
 };
 
 /* ── Zustand Store ──────────────────────────────────── */
@@ -189,12 +193,14 @@ export const useAppStore = create<AppState & AppActions>()(
 
       verifyFail: (message, habitResults) => {
         const state = get();
+        const useFreeze = state.streakFreezes > 0;
         set({
           todayVerified: false,
           verificationSuccess: false,
           verificationCharacterMessage: message ?? null,
           habitVerificationResults: habitResults ?? null,
-          streak: 0,
+          streak: useFreeze ? state.streak : 0,
+          streakFreezes: useFreeze ? state.streakFreezes - 1 : 0,
           affection: Math.max(0, state.affection - 5),
         });
       },
@@ -244,14 +250,22 @@ export const useAppStore = create<AppState & AppActions>()(
         return true;
       },
 
+      purchaseStreakFreeze: () => {
+        const state = get();
+        if (state.currency < STREAK_FREEZE_PRICE) return false;
+        set({ currency: state.currency - STREAK_FREEZE_PRICE, streakFreezes: state.streakFreezes + 1 });
+        return true;
+      },
+
       pullGacha: () => {
         const state = get();
         if (state.currency < GACHA_COST) return null;
         const pool: (GachaReward & { cumProb: number })[] = [
-          { label: "호감도 +10", type: "affection", amount: 10, rarity: "common", cumProb: 0.55 },
-          { label: "코인 +50",   type: "coins",     amount: 50, rarity: "common", cumProb: 0.85 },
-          { label: "호감도 +30", type: "affection", amount: 30, rarity: "rare",   cumProb: 0.97 },
-          { label: "코인 +200",  type: "coins",     amount: 200, rarity: "epic",  cumProb: 1.00 },
+          { label: "호감도 +10",    type: "affection",     amount: 10,  rarity: "common", cumProb: 0.50 },
+          { label: "코인 +50",      type: "coins",         amount: 50,  rarity: "common", cumProb: 0.78 },
+          { label: "스트릭 프리즈", type: "streak_freeze", amount: 1,   rarity: "rare",   cumProb: 0.90 },
+          { label: "호감도 +30",    type: "affection",     amount: 30,  rarity: "rare",   cumProb: 0.97 },
+          { label: "코인 +200",     type: "coins",         amount: 200, rarity: "epic",   cumProb: 1.00 },
         ];
         const rand = Math.random();
         const { label, type, amount, rarity } = pool.find((p) => rand < p.cumProb)!;
@@ -259,6 +273,7 @@ export const useAppStore = create<AppState & AppActions>()(
         set({
           currency: state.currency - GACHA_COST + (type === "coins" ? amount : 0),
           affection: type === "affection" ? Math.min(660, state.affection + amount) : state.affection,
+          streakFreezes: type === "streak_freeze" ? state.streakFreezes + amount : state.streakFreezes,
         });
         return reward;
       },
