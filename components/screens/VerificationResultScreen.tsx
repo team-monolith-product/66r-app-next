@@ -107,9 +107,13 @@ export default function VerificationResultScreen() {
           <GameButton fullWidth onClick={() => dispatch({ type: "SET_SCREEN", screen: "home" })}>
             홈으로
           </GameButton>
-          {isSuccess && (
+          {isSuccess ? (
             <GameButton variant="secondary" fullWidth onClick={() => dispatch({ type: "SET_SCREEN", screen: "chat" })}>
               ♡ 대화하기
+            </GameButton>
+          ) : (
+            <GameButton variant="secondary" fullWidth onClick={() => dispatch({ type: "SET_SCREEN", screen: "verification" })}>
+              다시 시도
             </GameButton>
           )}
         </div>
