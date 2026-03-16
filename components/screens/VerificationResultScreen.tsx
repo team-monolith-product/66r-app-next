@@ -53,7 +53,7 @@ export default function VerificationResultScreen() {
       className="relative w-full h-full flex flex-col overflow-hidden"
       style={{ background: "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 55%, #caeaf8 100%)" }}
     >
-      {showUnlockModal && pendingStoryRead && (
+      {showUnlockModal && pendingStoryRead !== null && (
         <StoryUnlockModal
           episodeId={pendingStoryRead}
           onRead={() => router.push("/story")}

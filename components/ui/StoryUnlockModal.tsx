@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, CloudRain } from "lucide-react";
 import GameButton from "@/components/ui/GameButton";
 import { useAppStore } from "@/store/useAppStore";
 
@@ -12,13 +12,21 @@ interface Props {
 
 export default function StoryUnlockModal({ episodeId, onRead, onDismiss }: Props) {
   const character = useAppStore((s) => s.character);
-  const color = character?.color ?? "#a78bfa";
+
+  const isBadStory = episodeId === 0;
+  const color = isBadStory ? "#94a3b8" : (character?.color ?? "#a78bfa");
+  const Icon = isBadStory ? CloudRain : BookOpen;
+  const badge = isBadStory ? "특별 에피소드" : `EPISODE ${episodeId}`;
+  const title = isBadStory ? "7일의 침묵" : "새 스토리 해금!";
+  const subtitle = isBadStory
+    ? `${character?.name ?? "그 아이"}가 걱정하고 있어요.\n지금 이야기를 들어볼까요?`
+    : `${character?.name ?? ""}와의 새로운 이야기가\n시작될 준비가 됐어요.`;
 
   return (
     <div
       className="absolute inset-0 z-50 flex items-center justify-center px-8"
       style={{ background: "rgba(20, 50, 80, 0.52)" }}
-      onClick={onDismiss}
+      onClick={isBadStory ? undefined : onDismiss}
     >
       <div
         className="w-full max-w-[300px] rounded-3xl overflow-hidden animate-slide-up"
@@ -52,39 +60,41 @@ export default function StoryUnlockModal({ episodeId, onRead, onDismiss }: Props
               boxShadow: `0 6px 20px ${color}28`,
             }}
           >
-            <BookOpen size={26} color={color} strokeWidth={1.8} />
+            <Icon size={26} color={color} strokeWidth={1.8} />
           </div>
 
-          {/* EP 뱃지 */}
+          {/* 뱃지 */}
           <span
             className="text-[11px] font-black tracking-widest px-3 py-[3px] rounded-full mb-2"
             style={{ background: `${color}15`, color, border: `1px solid ${color}40` }}
           >
-            EPISODE {episodeId}
+            {badge}
           </span>
 
           <h3 className="text-[19px] font-black" style={{ color: "#1a3a5c" }}>
-            새 스토리 해금!
+            {title}
           </h3>
         </div>
 
         {/* 하단 */}
         <div className="px-6 pt-4 pb-6 flex flex-col gap-4">
-          <p className="text-[13px] text-center leading-[1.8]" style={{ color: "#7a9bb5" }}>
-            {character?.name}와의 새로운 이야기가<br />시작될 준비가 됐어요.
+          <p className="text-[13px] text-center leading-[1.8] whitespace-pre-line" style={{ color: "#7a9bb5" }}>
+            {subtitle}
           </p>
 
           <GameButton fullWidth onClick={onRead}>
-            지금 읽기
+            {isBadStory ? "엔딩 보기" : "지금 읽기"}
           </GameButton>
 
-          <button
-            className="text-[12px] text-center transition-opacity hover:opacity-70"
-            style={{ color: "#aabdd0" }}
-            onClick={onDismiss}
-          >
-            나중에 읽기
-          </button>
+          {!isBadStory && (
+            <button
+              className="text-[12px] text-center transition-opacity hover:opacity-70"
+              style={{ color: "#aabdd0" }}
+              onClick={onDismiss}
+            >
+              나중에 읽기
+            </button>
+          )}
         </div>
       </div>
     </div>

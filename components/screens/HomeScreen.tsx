@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppStore, RELATIONSHIP_LEVELS, getRelationshipLevel } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
@@ -23,15 +23,17 @@ export default function HomeScreen() {
   const nextDay = useAppStore((s) => s.nextDay);
   const pendingStoryRead = useAppStore((s) => s.pendingStoryRead);
   const clearPendingStory = useAppStore((s) => s.clearPendingStory);
+  const setEnding = useAppStore((s) => s.setEnding);
 
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const handledRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!pendingStoryRead) return;
+    if (pendingStoryRead === null || pendingStoryRead === handledRef.current) return;
+    handledRef.current = pendingStoryRead;
     const timer = setTimeout(() => setShowUnlockModal(true), 500);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pendingStoryRead]);
 
   if (!character) return null;
 
@@ -75,10 +77,18 @@ export default function HomeScreen() {
         background: "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 50%, #caeaf8 100%)",
       }}
     >
-      {showUnlockModal && pendingStoryRead && (
+      {showUnlockModal && pendingStoryRead !== null && (
         <StoryUnlockModal
           episodeId={pendingStoryRead}
-          onRead={() => router.push("/story")}
+          onRead={() => {
+            clearPendingStory();
+            if (pendingStoryRead === 0) {
+              setEnding("bad");
+              router.push("/ending");
+            } else {
+              router.push("/story");
+            }
+          }}
           onDismiss={() => { clearPendingStory(); setShowUnlockModal(false); }}
         />
       )}

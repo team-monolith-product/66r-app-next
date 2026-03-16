@@ -29,6 +29,7 @@ export interface AppState {
   habitVerificationResults: { habit: string; verified: boolean }[] | null;
   endingType: "best" | "normal" | "bad" | null;
   pendingStoryRead: number | null;
+  badStoryUnlocked: boolean;
 }
 
 export interface AppActions {
@@ -118,6 +119,7 @@ const initialState: AppState = {
   habitVerificationResults: null,
   endingType: null,
   pendingStoryRead: null,
+  badStoryUnlocked: false,
 };
 
 /* ── Zustand Store ──────────────────────────────────── */
@@ -184,6 +186,9 @@ export const useAppStore = create<AppState & AppActions>()(
           set({ dayCount: 66, endingType });
           return "/ending";
         }
+        const lastCompleted = state.completedDays.length > 0 ? Math.max(...state.completedDays) : 0;
+        const failStreak = (nextDayCount - 1) - lastCompleted;
+        const triggerBadStory = failStreak >= 7 && !state.badStoryUnlocked;
         set({
           dayCount: nextDayCount,
           todayVerified: false,
@@ -191,6 +196,7 @@ export const useAppStore = create<AppState & AppActions>()(
           verificationSuccess: null,
           verificationCharacterMessage: null,
           habitVerificationResults: null,
+          ...(triggerBadStory && { pendingStoryRead: 0, badStoryUnlocked: true }),
         });
         return "/home";
       },

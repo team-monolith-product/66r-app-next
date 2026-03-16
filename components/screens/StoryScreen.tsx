@@ -17,6 +17,16 @@ interface StoryEpisode {
   content: Record<string, string[]>;
 }
 
+const BAD_STORY: StoryEpisode = {
+  id: 0, title: "7일의 침묵", unlockLevel: 0,
+  preview: "",
+  content: {
+    tsundere:    ["...7일이나 됐어. 알고 있었어?", "포기한 건 아니지? 그냥... 걱정됐어, 조금.", "다시 시작해. 나 아직 여기 있으니까."],
+    genki:       ["7일 동안 어디 있었어?! 걱정했잖아!", "힘들었구나... 그래도 괜찮아. 지금부터 다시 하면 돼!", "포기하지 마! 나는 절대 안 떠나, 알지?"],
+    intellectual:["7일간의 공백. 데이터가 말해주고 있어요.", "슬럼프는 누구에게나 찾아와요. 중요한 건 다시 시작하는 거예요.", "지금 이 순간이 새로운 출발점이 될 수 있어요. 함께해요."],
+  },
+};
+
 const STORIES: StoryEpisode[] = [
   {
     id: 1, title: "처음 만난 날", unlockLevel: 1,
@@ -108,8 +118,10 @@ export default function StoryScreen() {
   const type = character?.type ?? "genki";
 
   useEffect(() => {
-    if (pendingStoryRead) {
-      const story = STORIES.find((s) => s.id === pendingStoryRead);
+    if (pendingStoryRead !== null) {
+      const story = pendingStoryRead === 0
+        ? BAD_STORY
+        : STORIES.find((s) => s.id === pendingStoryRead);
       if (story) { setReading(story); setLineIndex(0); }
       clearPendingStory();
     }
