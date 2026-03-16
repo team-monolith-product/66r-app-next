@@ -493,7 +493,7 @@ export default function VerificationScreen() {
                   boxShadow: `0 2px 14px ${charColor}55`,
                 }}
               >
-                예, 직접 찍었어
+                맞아, 내가 찍었어
               </button>
               <button
                 onClick={() => moveToNextHabit(false)}
@@ -504,7 +504,7 @@ export default function VerificationScreen() {
                   border: "1.5px solid rgba(120,160,190,0.28)",
                 }}
               >
-                아니, 인터넷 사진이야
+                아니, 퍼온 거야
               </button>
             </div>
           ) : (
