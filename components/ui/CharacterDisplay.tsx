@@ -8,12 +8,14 @@ interface CharacterDisplayProps {
   character: CharacterData;
   size?: "sm" | "md" | "lg" | "hero";
   mood?: "neutral" | "happy" | "shy" | "sad";
+  disableZoom?: boolean;
 }
 
 export default function CharacterDisplay({
   character,
   size = "md",
   mood = "neutral",
+  disableZoom = false,
 }: CharacterDisplayProps) {
   const [zoomed, setZoomed] = useState(false);
 
@@ -34,9 +36,9 @@ export default function CharacterDisplay({
           position: "relative",
           zIndex: zoomed ? 50 : "auto",
           filter: `drop-shadow(0 0 ${zoomed ? "28px" : "12px"} ${character.color}${zoomed ? "aa" : "66"})`,
-          cursor: size === "hero" ? "default" : "pointer",
+          cursor: size === "hero" || disableZoom ? "default" : "pointer",
         }}
-        onClick={size !== "hero" ? () => setZoomed((v) => !v) : undefined}
+        onClick={size !== "hero" && !disableZoom ? () => setZoomed((v) => !v) : undefined}
       >
         <Live2DViewer size={size} mood={mood} focus={zoomed ? "full" : "upper"} />
       </div>
