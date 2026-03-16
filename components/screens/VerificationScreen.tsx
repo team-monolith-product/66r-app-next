@@ -1,17 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
-import GameButton from "@/components/ui/GameButton";
-import SparkleEffect from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
+import SparkleEffect from "@/components/ui/SparkleEffect";
 
-const INITIAL_PROMPTS: Record<string, string> = {
-  tsundere: "오늘 습관 지켰어? 증명해봐.",
-  genki: "오늘 뭐 했는지 보여줘! 기대하고 있어!",
-  intellectual: "오늘의 습관 이행을 검증해드리겠습니다. 증거를 제시해주세요.",
+const OPENING_MESSAGES: Record<string, (habits: string[]) => string> = {
+  tsundere: (h) => `오늘 ${h[0]} 했어? 증명해봐. 말만으론 안 믿어.`,
+  genki: (h) => `오늘 ${h.join(", ")} 다 했어?! 뭐했는지 자세히 보여줘! 사진도 같이!`,
+  intellectual: (h) =>
+    `오늘의 습관 인증을 시작합니다. ${h[0]}부터 텍스트 설명과 사진 증거를 함께 제시해주세요.`,
 };
 
 const GIVE_UP_MESSAGES: Record<string, string> = {
@@ -20,8 +20,41 @@ const GIVE_UP_MESSAGES: Record<string, string> = {
   intellectual: "오늘의 데이터는 실패입니다. 내일 재개하세요.",
 };
 
-type InputTab = "text" | "image";
-type HabitImage = { base64: string; mediaType: string; preview: string } | null;
+type ApiMessage = {
+  role: "user" | "assistant";
+  text: string;
+  imageBase64?: string;
+  imageMediaType?: string;
+};
+
+type PhotoData = {
+  base64: string;
+  mediaType: string;
+  preview: string;
+};
+
+type SentMessage = {
+  text: string;
+  imagePreview?: string;
+};
+
+function useTypewriter(text: string, speed = 26) {
+  const [displayed, setDisplayed] = useState(text);
+
+  useEffect(() => {
+    setDisplayed("");
+    if (!text) return;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) clearInterval(id);
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed]);
+
+  return displayed;
+}
 
 export default function VerificationScreen() {
   const router = useRouter();
@@ -30,38 +63,35 @@ export default function VerificationScreen() {
   const habits = useAppStore((s) => s.habits);
   const character = useAppStore((s) => s.character);
   const dayCount = useAppStore((s) => s.dayCount);
+  const streak = useAppStore((s) => s.streak);
   const verifySuccess = useAppStore((s) => s.verifySuccess);
   const verifyFail = useAppStore((s) => s.verifyFail);
 
-  const [tab, setTab] = useState<InputTab>("text");
-  const [textContent, setTextContent] = useState("");
-  const [habitImages, setHabitImages] = useState<HabitImage[]>(() => habits.map(() => null));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingSlotRef = useRef<number>(-1);
-
   const characterType = character?.type ?? "genki";
-  const prompt = INITIAL_PROMPTS[characterType] ?? INITIAL_PROMPTS.genki;
-  const canSubmit =
-    tab === "text"
-      ? textContent.trim().length > 0
-      : habitImages.some((img) => img !== null);
+  const charColor = character?.color ?? "#4aacef";
+  const openingMsg = OPENING_MESSAGES[characterType]?.(habits) ?? "";
 
-  const triggerFileInput = (slotIndex: number) => {
-    pendingSlotRef.current = slotIndex;
-    fileInputRef.current?.click();
-  };
+  const [charMessage, setCharMessage] = useState(openingMsg);
+  const [loading, setLoading] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [attachedPhoto, setAttachedPhoto] = useState<PhotoData | null>(null);
+  const [turnCount, setTurnCount] = useState(0);
+  const [sentMessage, setSentMessage] = useState<SentMessage | null>(null);
+  const [apiMessages, setApiMessages] = useState<ApiMessage[]>([
+    { role: "assistant", text: openingMsg },
+  ]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const typedMessage = useTypewriter(charMessage);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const canSend = (inputText.trim().length > 0 || attachedPhoto !== null) && !loading;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const slot = pendingSlotRef.current;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      // Canvas로 리사이즈 + JPEG 변환 (HEIC/대용량 이미지 대응)
       const img = new Image();
       img.onload = () => {
         const MAX = 1024;
@@ -71,14 +101,10 @@ export default function VerificationScreen() {
         canvas.height = Math.round(img.height * ratio);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         const compressed = canvas.toDataURL("image/jpeg", 0.75);
-        setHabitImages((prev) => {
-          const next = [...prev];
-          next[slot] = {
-            base64: compressed.split(",")[1],
-            mediaType: "image/jpeg",
-            preview: compressed,
-          };
-          return next;
+        setAttachedPhoto({
+          base64: compressed.split(",")[1],
+          mediaType: "image/jpeg",
+          preview: compressed,
         });
       };
       img.src = dataUrl;
@@ -87,22 +113,30 @@ export default function VerificationScreen() {
     e.target.value = "";
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit || loading) return;
+  const handleSend = async () => {
+    if (!canSend) return;
+    const userText = inputText.trim();
+    const photo = attachedPhoto;
+    const newTurnCount = turnCount + 1;
+
+    setSentMessage({ text: userText, imagePreview: photo?.preview });
+    setInputText("");
+    setAttachedPhoto(null);
     setLoading(true);
-    setError(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+
+    const newUserMsg: ApiMessage = {
+      role: "user",
+      text: userText,
+      imageBase64: photo?.base64,
+      imageMediaType: photo?.mediaType,
+    };
+    const updated = [...apiMessages, newUserMsg];
+    setApiMessages(updated);
 
     try {
-      const input =
-        tab === "text"
-          ? { type: "text" as const, content: textContent }
-          : {
-              type: "image" as const,
-              habitImages: habitImages.map((img) =>
-                img ? { base64: img.base64, mediaType: img.mediaType } : null
-              ),
-            };
-
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,215 +144,294 @@ export default function VerificationScreen() {
           habits,
           characterType: character?.type ?? "genki",
           characterName: character?.name ?? "캐릭터",
-          input,
+          dayCount,
+          streak,
+          messages: updated,
+          turnCount: newTurnCount,
         }),
       });
 
       if (!res.ok) throw new Error("API error");
 
-      const { habitResults, overallVerified, message } = (await res.json()) as {
-        habitResults: { habit: string; verified: boolean }[];
-        overallVerified: boolean;
+      const data = (await res.json()) as {
+        action: "follow_up" | "verdict";
         message: string;
+        habitResults?: { habit: string; verified: boolean }[];
+        overallVerified?: boolean;
       };
 
-      if (overallVerified) {
-        verifySuccess(message, habitResults);
+      if (data.action === "follow_up") {
+        setApiMessages((prev) => [...prev, { role: "assistant", text: data.message }]);
+        setSentMessage(null);
+        setCharMessage(data.message);
+        setTurnCount(newTurnCount);
+        setLoading(false);
       } else {
-        verifyFail(message, habitResults);
+        if (data.overallVerified) {
+          verifySuccess(data.message, data.habitResults ?? []);
+        } else {
+          verifyFail(data.message, data.habitResults ?? []);
+        }
+        router.push("/verification/result");
       }
-      router.push("/verification/result");
     } catch {
-      setError("인증 요청에 실패했어요. 다시 시도해주세요.");
-    } finally {
+      setSentMessage(null);
+      setCharMessage("오류가 발생했어요. 다시 시도해주세요.");
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const handleGiveUp = () => {
-    const message = GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki;
-    verifyFail(message);
+    verifyFail(GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki);
     router.push("/verification/result");
   };
 
   return (
-    <div className="relative w-full h-full game-gradient-bg flex flex-col overflow-hidden">
-      <SparkleEffect count={6} />
+    <div className="relative w-full h-full overflow-hidden game-gradient-bg flex flex-col">
+      <SparkleEffect count={8} />
 
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-5 pt-12 pb-4 z-10">
+      {/* ── Top HUD ────────────────────────────────────────── */}
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-5 pt-12 pb-4">
         <button
-          className="text-[var(--text-secondary)]"
           onClick={() => router.push("/home")}
+          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all active:scale-95"
+          style={{
+            background: "rgba(255,255,255,0.72)",
+            color: charColor,
+            border: `1px solid ${charColor}44`,
+            backdropFilter: "blur(10px)",
+          }}
         >
-          ←
+          ← 홈
         </button>
-        <div>
-          <p className="text-xs text-[var(--text-secondary)] tracking-widest uppercase">Day {dayCount}</p>
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">오늘의 인증</h2>
+
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+          style={{
+            background: "rgba(255,255,255,0.72)",
+            color: charColor,
+            border: `1px solid ${charColor}44`,
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          Day {dayCount}
+          {turnCount > 0 && (
+            <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
+              &nbsp;· {turnCount}/3
+            </span>
+          )}
         </div>
+
+        <button
+          onClick={handleGiveUp}
+          className="text-xs px-3 py-1.5 rounded-full transition-all active:scale-95"
+          style={{
+            background: "rgba(255,255,255,0.55)",
+            color: "var(--text-secondary)",
+            border: "1px solid rgba(120,160,190,0.28)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          포기
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto hide-scrollbar px-5 z-10 flex flex-col gap-4 pb-4">
-        {/* 캐릭터 + 말풍선 */}
+      {/* ── Character Stage ─────────────────────────────────── */}
+      <div
+        className="absolute left-0 right-0 flex items-end justify-center z-10 pointer-events-none"
+        style={{ top: "60px", bottom: "290px" }}
+      >
         {character && (
-          <div className="flex items-end gap-3">
-            <CharacterDisplay character={character} size="sm" mood="neutral" />
-            <div
-              className="flex-1 px-4 py-3 rounded-2xl rounded-bl-sm"
-              style={{
-                background: "rgba(255,255,255,0.88)",
-                border: `1px solid ${character.color}44`,
-                boxShadow: `0 2px 12px ${character.color}18`,
-              }}
-            >
-              <p className="text-sm leading-relaxed" style={{ color: "#1a3a5c" }}>
-                {loading ? "판단 중…" : prompt}
-              </p>
+          <CharacterDisplay
+            character={character}
+            size="lg"
+            mood={loading ? "neutral" : "happy"}
+            disableZoom
+          />
+        )}
+      </div>
+
+      {/* ── VN Dialog Box ───────────────────────────────────── */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col">
+        {/* User sent message (floats above box) */}
+        {sentMessage && (
+          <div className="flex items-end justify-end gap-2 px-5 pb-2">
+            {sentMessage.imagePreview && (
+              <img
+                src={sentMessage.imagePreview}
+                alt="첨부"
+                className="w-12 h-12 object-cover rounded-xl flex-shrink-0"
+                style={{
+                  border: `2px solid ${charColor}66`,
+                  boxShadow: `0 2px 8px ${charColor}33`,
+                }}
+              />
+            )}
+            {sentMessage.text && (
+              <div
+                className="max-w-[72%] px-4 py-2.5 rounded-2xl rounded-br-sm text-sm leading-snug"
+                style={{
+                  background: charColor,
+                  color: "#fff",
+                  boxShadow: `0 3px 14px ${charColor}55`,
+                }}
+              >
+                {sentMessage.text}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Photo attach preview (before sending) */}
+        {attachedPhoto && !sentMessage && (
+          <div className="flex items-end justify-end px-5 pb-2">
+            <div className="relative">
+              <img
+                src={attachedPhoto.preview}
+                alt="첨부 미리보기"
+                className="w-16 h-16 object-cover rounded-xl"
+                style={{
+                  border: `2px solid ${charColor}66`,
+                  boxShadow: `0 2px 8px ${charColor}33`,
+                }}
+              />
+              <button
+                onClick={() => setAttachedPhoto(null)}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black"
+                style={{ background: "rgba(0,0,0,0.6)", color: "#fff" }}
+              >
+                ✕
+              </button>
             </div>
           </div>
         )}
 
-        {/* 탭 */}
+        {/* Dialog panel */}
         <div
-          className="flex rounded-xl overflow-hidden"
-          style={{ background: "rgba(0,0,0,0.06)" }}
+          style={{
+            background: "rgba(255,255,255,0.94)",
+            borderTop: `2.5px solid ${charColor}55`,
+            boxShadow: `0 -8px 40px rgba(90,150,200,0.16)`,
+            backdropFilter: "blur(20px)",
+          }}
         >
-          {(["text", "image"] as InputTab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="flex-1 py-2 text-sm font-bold transition-all"
-              style={
-                tab === t
-                  ? {
-                      background: character?.color ?? "#4aacef",
-                      color: "#fff",
-                      borderRadius: "10px",
-                    }
-                  : { color: "var(--text-secondary)" }
-              }
+          {/* Character name + message */}
+          <div className="px-5 pt-4 pb-3">
+            {/* Name chip */}
+            <span
+              className="inline-block text-xs font-bold px-3 py-0.5 rounded-full mb-2.5"
+              style={{
+                background: `${charColor}18`,
+                color: charColor,
+                border: `1px solid ${charColor}44`,
+              }}
             >
-              {t === "text" ? "📝 텍스트" : "📷 사진"}
-            </button>
-          ))}
-        </div>
+              {character?.name ?? "캐릭터"}
+            </span>
 
-        {/* 입력 영역 */}
-        {tab === "text" ? (
-          <textarea
-            className="w-full glass-panel rounded-2xl p-4 text-sm resize-none outline-none"
-            rows={5}
-            placeholder="오늘 어떻게 했는지 구체적으로 적어주세요..."
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
-            style={{ color: "var(--text-primary)" }}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs px-1" style={{ color: "var(--text-secondary)" }}>
-              각 습관마다 사진 1장씩 업로드하세요. 반 이상 통과하면 인증 성공!
-            </p>
-            {habits.map((habit, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 glass-panel rounded-2xl p-3"
-              >
-                {/* 습관 태그 */}
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
-                  style={{
-                    background: `${character?.color ?? "#4aacef"}18`,
-                    color: character?.color ?? "#4aacef",
-                    border: `1px solid ${character?.color ?? "#4aacef"}44`,
-                    maxWidth: "100px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {habit}
-                </span>
-
-                {/* 사진 슬롯 */}
-                {habitImages[i] ? (
-                  <div className="relative w-16 h-16 flex-shrink-0">
-                    <img
-                      src={habitImages[i]!.preview}
-                      alt={`${habit} 사진`}
-                      className="w-full h-full object-cover rounded-xl"
+            {/* Message */}
+            <div className="min-h-[3rem]" style={{ color: "var(--text-primary)" }}>
+              {loading ? (
+                <div className="flex gap-1.5 items-center mt-1">
+                  {[0, 1, 2].map((j) => (
+                    <span
+                      key={j}
+                      className="inline-block w-2 h-2 rounded-full animate-bounce"
+                      style={{
+                        background: charColor,
+                        animationDelay: `${j * 0.16}s`,
+                        opacity: 0.75,
+                      }}
                     />
-                    <button
-                      onClick={() =>
-                        setHabitImages((prev) => {
-                          const next = [...prev];
-                          next[i] = null;
-                          return next;
-                        })
-                      }
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
-                      style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => triggerFileInput(i)}
-                    className="w-16 h-16 rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 transition-all active:scale-95"
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed font-medium">
+                  {typedMessage}
+                  <span
+                    className="inline-block w-0.5 h-4 ml-px align-text-bottom animate-pulse"
                     style={{
-                      border: `2px dashed ${character?.color ?? "#4aacef"}55`,
-                      background: `${character?.color ?? "#4aacef"}08`,
+                      background: charColor,
+                      opacity: typedMessage === charMessage ? 0 : 1,
                     }}
-                  >
-                    <span className="text-lg">+</span>
-                  </button>
-                )}
-
-                {/* 상태 표시 */}
-                <span className="text-xs ml-auto" style={{ color: "var(--text-secondary)" }}>
-                  {habitImages[i] ? "✓ 업로드됨" : "미업로드"}
-                </span>
-              </div>
-            ))}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
+                  />
+                </p>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* 에러 */}
-        {error && (
-          <p className="text-xs text-center" style={{ color: "#f87171" }}>
-            {error}
-          </p>
-        )}
+          {/* Input row */}
+          <div
+            className="flex items-end gap-2 px-4 pb-10 pt-2"
+            style={{ borderTop: `1px solid ${charColor}1a` }}
+          >
+            {/* Photo button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 text-lg"
+              style={{
+                background: attachedPhoto ? `${charColor}22` : "rgba(0,0,0,0.05)",
+                border: `1.5px solid ${attachedPhoto ? charColor : charColor + "33"}`,
+              }}
+            >
+              📷
+            </button>
+
+            {/* Text input */}
+            <textarea
+              ref={textareaRef}
+              className="flex-1 rounded-2xl px-4 py-2.5 text-sm resize-none outline-none hide-scrollbar"
+              rows={1}
+              placeholder="메시지를 입력하세요…"
+              value={inputText}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 80)}px`;
+              }}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
+              style={{
+                background: "rgba(0,0,0,0.05)",
+                color: "var(--text-primary)",
+                border: `1.5px solid ${charColor}33`,
+                maxHeight: "80px",
+              }}
+            />
+
+            {/* Send */}
+            <button
+              onClick={handleSend}
+              disabled={!canSend}
+              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 font-bold text-base"
+              style={{
+                background: canSend ? charColor : `${charColor}2a`,
+                color: canSend ? "#fff" : `${charColor}66`,
+                boxShadow: canSend ? `0 2px 14px ${charColor}55` : "none",
+                transition: "all 0.18s ease",
+              }}
+            >
+              ↑
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 하단 버튼 */}
-      <div className="px-5 pb-10 pt-3 z-10 flex flex-col gap-2">
-        <GameButton
-          fullWidth
-          size="lg"
-          disabled={!canSubmit || loading}
-          onClick={handleSubmit}
-          style={{ opacity: canSubmit && !loading ? 1 : 0.4 }}
-        >
-          {loading ? "판단 중…" : "제출하기"}
-        </GameButton>
-        <button
-          onClick={handleGiveUp}
-          disabled={loading}
-          className="text-xs text-center py-2"
-          style={{ color: "var(--text-secondary)", opacity: 0.6 }}
-        >
-          오늘은 못 했어요
-        </button>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </div>
   );
 }
