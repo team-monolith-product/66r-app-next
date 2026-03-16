@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore, getRelationshipLevel } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
@@ -17,13 +17,13 @@ export default function VerificationResultScreen() {
   const habitVerificationResults = useAppStore((s) => s.habitVerificationResults);
   const character = useAppStore((s) => s.character);
   const streak = useAppStore((s) => s.streak);
-  const dayCount = useAppStore((s) => s.dayCount);
+  const affection = useAppStore((s) => s.affection);
   const unlockedStories = useAppStore((s) => s.unlockedStories);
 
   const isSuccess = verificationSuccess === true;
 
-  const storyId = Math.floor(dayCount / 10);
-  const hasNewStory = storyId > 0 && unlockedStories.includes(storyId) && dayCount % 10 === 0;
+  const currentLevel = getRelationshipLevel(affection);
+  const hasNewStory = isSuccess && currentLevel > 1 && unlockedStories.includes(currentLevel);
 
   const successMessages = ["…오늘도 해냈네. 잘했어.", "역시 믿었어! 대단해!", "꾸준함이 가장 큰 힘이야."];
   const failMessages    = ["…뭐, 내일 다시 하면 돼.", "실망이야. 내일은 꼭 해.", "포기하지는 마. 다시 시작해."];

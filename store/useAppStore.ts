@@ -44,6 +44,27 @@ export interface AppActions {
   debugPatch: (patch: Partial<AppState>) => void;
 }
 
+/* ── 관계 레벨 ──────────────────────────────────────── */
+export const RELATIONSHIP_LEVELS = [
+  { level: 1, name: "낯선 사람",   threshold: 0   },
+  { level: 2, name: "아는 사이",   threshold: 80  },
+  { level: 3, name: "친구",        threshold: 165 },
+  { level: 4, name: "친한 친구",   threshold: 250 },
+  { level: 5, name: "특별한 사람", threshold: 330 },
+  { level: 6, name: "믿는 사람",   threshold: 420 },
+  { level: 7, name: "소중한 사람", threshold: 510 },
+  { level: 8, name: "연인",        threshold: 600 },
+] as const;
+
+export function getRelationshipLevel(affection: number): number {
+  let level = 1;
+  for (const rl of RELATIONSHIP_LEVELS) {
+    if (affection >= rl.threshold) level = rl.level;
+    else break;
+  }
+  return level;
+}
+
 /* ── 캐릭터 데이터 ──────────────────────────────────── */
 export const CHARACTERS: CharacterData[] = [
   {
@@ -89,7 +110,7 @@ const initialState: AppState = {
   todayHabitChecks: [],
   completedDays: [],
   currency: 0,
-  unlockedStories: [],
+  unlockedStories: [1],
   verificationSuccess: null,
   verificationCharacterMessage: null,
   habitVerificationResults: null,
@@ -119,10 +140,11 @@ export const useAppStore = create<AppState & AppActions>()(
         const newDays = state.completedDays.includes(state.dayCount)
           ? state.completedDays
           : [...state.completedDays, state.dayCount];
-        const storyId = Math.floor(state.dayCount / 10);
+        const newLevel = getRelationshipLevel(newAffection);
+        const oldLevel = getRelationshipLevel(state.affection);
         const newStories =
-          storyId > 0 && !state.unlockedStories.includes(storyId)
-            ? [...state.unlockedStories, storyId]
+          newLevel > oldLevel && !state.unlockedStories.includes(newLevel)
+            ? [...state.unlockedStories, newLevel]
             : state.unlockedStories;
         set({
           todayVerified: true,

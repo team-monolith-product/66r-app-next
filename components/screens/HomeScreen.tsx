@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore, RELATIONSHIP_LEVELS, getRelationshipLevel } from "@/store/useAppStore";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
@@ -25,9 +25,8 @@ export default function HomeScreen() {
   const progressPct   = Math.round((dayCount / 66) * 100);
   const daysLeft      = 66 - dayCount;
   const affectionPct  = Math.round((affection / 660) * 100);
-  const level         = Math.floor(affection / 66) + 1;
-  const levelNames    = ["낯선", "인식", "관심", "호기심", "친밀", "유대", "신뢰", "특별", "애정", "연인"];
-  const levelName     = levelNames[Math.min(level - 1, 9)];
+  const level         = getRelationshipLevel(affection);
+  const levelName     = RELATIONSHIP_LEVELS.find((r) => r.level === level)?.name ?? "";
 
   const staminaGradient =
     affectionPct > 60
