@@ -7,7 +7,7 @@ import DayCalendar from "@/components/ui/DayCalendar";
 
 export default function DashboardScreen() {
   const { state } = useApp();
-  const { dayCount, streak, completedDays, habit, character, currency, affection } = state;
+  const { dayCount, streak, completedDays, habits, character, currency, affection } = state;
 
   const completionRate = Math.round((completedDays.length / Math.max(dayCount - 1, 1)) * 100);
   const level = Math.floor(affection / 66) + 1;
@@ -27,9 +27,10 @@ export default function DashboardScreen() {
       {/* 헤더 */}
       <div className="px-5 pt-12 pb-3 z-10">
         <h2 className="text-xl font-bold text-[var(--text-primary)]">대시보드</h2>
-        {habit && (
+        {habits.length > 0 && (
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            목표: <span style={{ color: character?.color ?? "var(--gold)" }}>{habit}</span>
+            목표: <span style={{ color: character?.color ?? "var(--gold)" }}>{habits[0]}</span>
+            {habits.length > 1 && ` 외 ${habits.length - 1}개`}
           </p>
         )}
       </div>

@@ -14,7 +14,10 @@ export default function DebugPanel() {
     const patch: Parameters<typeof dispatch>[0] = { type: "DEBUG_PATCH", patch: {} };
     const p: typeof patch extends { patch: infer P } ? P : never = {};
     if (!state.character) p.character = CHARACTERS[0];
-    if (!state.habit)     p.habit     = "매일 운동하기";
+    if (!state.habits || state.habits.length === 0) {
+      p.habits = ["매일 운동하기"];
+      p.todayHabitChecks = [false];
+    }
     if (Object.keys(p).length) dispatch({ type: "DEBUG_PATCH", patch: p });
   };
 

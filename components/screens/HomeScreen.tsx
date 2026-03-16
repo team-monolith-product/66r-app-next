@@ -6,7 +6,7 @@ import BottomNav from "@/components/ui/BottomNav";
 
 export default function HomeScreen() {
   const { state, dispatch } = useApp();
-  const { character, habit, todayVerified, dayCount, affection, streak, currency } = state;
+  const { character, habits, todayVerified, dayCount, affection, streak, currency } = state;
 
   if (!character) return null;
 
@@ -92,10 +92,17 @@ export default function HomeScreen() {
 
           {/* 목표 텍스트 */}
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-bold mb-0.5" style={{ color: "#e07820" }}>◎ 목표</div>
-            <p className="text-[13px] font-bold leading-tight truncate" style={{ color: "#1a3a5c" }}>
-              {habit}
-            </p>
+            <div className="text-[10px] font-bold mb-0.5" style={{ color: "#e07820" }}>
+              ◎ 목표 ({habits.length}개)
+            </div>
+            {habits.slice(0, 2).map((h, i) => (
+              <p key={i} className="text-[12px] font-bold leading-tight truncate" style={{ color: "#1a3a5c" }}>
+                {h}
+              </p>
+            ))}
+            {habits.length > 2 && (
+              <p className="text-[10px]" style={{ color: "#7a9bb5" }}>외 {habits.length - 2}개 더</p>
+            )}
           </div>
 
           <button

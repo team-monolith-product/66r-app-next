@@ -34,12 +34,13 @@ export interface CharacterData {
 
 export interface AppState {
   screen: ScreenName;
-  habit: string | null;
+  habits: string[];
   character: CharacterData | null;
   dayCount: number;          // 1~66
   affection: number;         // 0~660
   streak: number;
   todayVerified: boolean;
+  todayHabitChecks: boolean[];  // habits와 1:1 대응, 오늘 각 습관 인증 여부
   completedDays: number[];
   currency: number;
   unlockedStories: number[];
@@ -49,8 +50,9 @@ export interface AppState {
 
 export type AppAction =
   | { type: "SET_SCREEN"; screen: ScreenName }
-  | { type: "SET_HABIT"; habit: string }
+  | { type: "SET_HABITS"; habits: string[] }
   | { type: "SET_CHARACTER"; character: CharacterData }
+  | { type: "TOGGLE_HABIT_CHECK"; index: number }
   | { type: "VERIFY_SUCCESS" }
   | { type: "VERIFY_FAIL" }
   | { type: "NEXT_DAY" }
@@ -100,12 +102,13 @@ export const CHARACTERS: CharacterData[] = [
 /* ── 초기 상태 ──────────────────────────────────────── */
 const initialState: AppState = {
   screen: "splash",
-  habit: null,
+  habits: [],
   character: null,
   dayCount: 1,
   affection: 0,
   streak: 0,
   todayVerified: false,
+  todayHabitChecks: [],
   completedDays: [],
   currency: 0,
   unlockedStories: [],
@@ -119,11 +122,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case "SET_SCREEN":
       return { ...state, screen: action.screen };
 
-    case "SET_HABIT":
-      return { ...state, habit: action.habit };
+    case "SET_HABITS":
+      return {
+        ...state,
+        habits: action.habits,
+        todayHabitChecks: new Array(action.habits.length).fill(false),
+      };
 
     case "SET_CHARACTER":
       return { ...state, character: action.character };
+
+    case "TOGGLE_HABIT_CHECK": {
+      const checks = [...state.todayHabitChecks];
+      checks[action.index] = !checks[action.index];
+      return { ...state, todayHabitChecks: checks };
+    }
 
     case "VERIFY_SUCCESS": {
       const newAffection = Math.min(660, state.affection + 10);
@@ -177,6 +190,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         dayCount: nextDay,
         todayVerified: false,
+        todayHabitChecks: new Array(state.habits.length).fill(false),
         verificationSuccess: null,
         screen: "home",
       };
