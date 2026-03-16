@@ -1,15 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
 
 export default function SplashScreen() {
-  const { dispatch } = useApp();
+  const router = useRouter();
+  const habits = useAppStore((s) => s.habits);
+  const character = useAppStore((s) => s.character);
 
   useEffect(() => {
-    const t = setTimeout(() => dispatch({ type: "SET_SCREEN", screen: "onboarding" }), 2600);
+    const t = setTimeout(() => {
+      if (habits.length > 0 && character) {
+        router.replace("/home");
+      } else {
+        router.replace("/onboarding");
+      }
+    }, 2600);
     return () => clearTimeout(t);
-  }, [dispatch]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

@@ -1,14 +1,14 @@
 "use client";
 
-import { useApp } from "@/components/AppContext";
+import { useAppStore } from "@/store/useAppStore";
 
 interface AffectionBarProps {
   showLabel?: boolean;
 }
 
 export default function AffectionBar({ showLabel = true }: AffectionBarProps) {
-  const { state } = useApp();
-  const { affection, character } = state;
+  const affection = useAppStore((s) => s.affection);
+  const character = useAppStore((s) => s.character);
 
   const percent = Math.round((affection / 660) * 100);
   const level   = Math.floor(affection / 66) + 1; // 1~10 레벨

@@ -1,10 +1,11 @@
 "use client";
 
-import { useApp } from "@/components/AppContext";
+import { useAppStore } from "@/store/useAppStore";
 
 export default function DayCalendar() {
-  const { state } = useApp();
-  const { completedDays, dayCount, character } = state;
+  const completedDays = useAppStore((s) => s.completedDays);
+  const dayCount = useAppStore((s) => s.dayCount);
+  const character = useAppStore((s) => s.character);
 
   const accentColor = character?.color ?? "#3a90d4";
 

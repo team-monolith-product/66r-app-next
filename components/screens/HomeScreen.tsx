@@ -1,12 +1,23 @@
 "use client";
 
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import BottomNav from "@/components/ui/BottomNav";
 
 export default function HomeScreen() {
-  const { state, dispatch } = useApp();
-  const { character, habits, todayVerified, dayCount, affection, streak, currency } = state;
+  const router = useRouter();
+  useRouteGuard("setup-complete");
+
+  const character = useAppStore((s) => s.character);
+  const habits = useAppStore((s) => s.habits);
+  const todayVerified = useAppStore((s) => s.todayVerified);
+  const dayCount = useAppStore((s) => s.dayCount);
+  const affection = useAppStore((s) => s.affection);
+  const streak = useAppStore((s) => s.streak);
+  const currency = useAppStore((s) => s.currency);
+  const nextDay = useAppStore((s) => s.nextDay);
 
   if (!character) return null;
 
@@ -186,7 +197,7 @@ export default function HomeScreen() {
                   background: "linear-gradient(145deg, #5cd885 0%, #2daa5e 100%)",
                   boxShadow: "0 4px 16px rgba(45,170,94,0.38)",
                 }}
-                onClick={() => dispatch({ type: "SET_SCREEN", screen: "verification" })}
+                onClick={() => router.push("/verification")}
               >
                 <span className="text-[22px] leading-none">✦</span>
                 <span className="text-[13px] font-black text-white">인증하기</span>
@@ -196,7 +207,7 @@ export default function HomeScreen() {
                 <button
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-transform active:scale-95"
                   style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 3px 10px rgba(58,144,212,0.32)" }}
-                  onClick={() => dispatch({ type: "SET_SCREEN", screen: "chat" })}
+                  onClick={() => router.push("/chat")}
                 >
                   <span className="text-base">♡</span>
                   <span className="text-[12px] font-black text-white">대화</span>
@@ -204,7 +215,7 @@ export default function HomeScreen() {
                 <button
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-transform active:scale-95"
                   style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 3px 10px rgba(139,112,232,0.32)" }}
-                  onClick={() => dispatch({ type: "NEXT_DAY" })}
+                  onClick={() => router.push(nextDay())}
                 >
                   <span className="text-base">→</span>
                   <span className="text-[12px] font-black text-white">다음날</span>
@@ -216,7 +227,7 @@ export default function HomeScreen() {
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl transition-transform active:scale-95"
                 style={{ background: "linear-gradient(145deg, #6bbef5 0%, #3a90d4 100%)", boxShadow: "0 4px 14px rgba(58,144,212,0.35)" }}
-                onClick={() => dispatch({ type: "SET_SCREEN", screen: "chat" })}
+                onClick={() => router.push("/chat")}
               >
                 <span className="text-xl">♡</span>
                 <span className="text-[13px] font-black text-white">대화하기</span>
@@ -224,7 +235,7 @@ export default function HomeScreen() {
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl transition-transform active:scale-95"
                 style={{ background: "linear-gradient(145deg, #b8a4f8 0%, #8b70e8 100%)", boxShadow: "0 4px 14px rgba(139,112,232,0.35)" }}
-                onClick={() => dispatch({ type: "NEXT_DAY" })}
+                onClick={() => router.push(nextDay())}
               >
                 <span className="text-xl">→</span>
                 <span className="text-[13px] font-black text-white">다음 날</span>

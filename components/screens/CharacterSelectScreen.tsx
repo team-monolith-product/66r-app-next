@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useApp, CHARACTERS, type CharacterData } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore, CHARACTERS, type CharacterData } from "@/store/useAppStore";
 import GameButton from "@/components/ui/GameButton";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import SparkleEffect from "@/components/ui/SparkleEffect";
 
 export default function CharacterSelectScreen() {
-  const { dispatch } = useApp();
+  const router = useRouter();
+  const setCharacter = useAppStore((s) => s.setCharacter);
   const [selected, setSelected] = useState<CharacterData>(CHARACTERS[0]);
 
   const handleConfirm = () => {
-    dispatch({ type: "SET_CHARACTER", character: selected });
-    dispatch({ type: "SET_SCREEN", screen: "home" });
+    setCharacter(selected);
+    router.push("/home");
   };
 
   return (

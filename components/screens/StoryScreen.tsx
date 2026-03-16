@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
 import GameButton from "@/components/ui/GameButton";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
@@ -75,8 +76,11 @@ const BG = "linear-gradient(180deg, #aad8f0 0%, #caeaf8 22%, #dff2fb 55%, #caeaf
 const PANEL = { background: "rgba(255,255,255,0.90)", border: "1px solid rgba(160,210,240,0.55)", boxShadow: "0 2px 12px rgba(90,150,200,0.10)" };
 
 export default function StoryScreen() {
-  const { state, dispatch } = useApp();
-  const { unlockedStories, character, dayCount } = state;
+  useRouteGuard("setup-complete");
+
+  const unlockedStories = useAppStore((s) => s.unlockedStories);
+  const character = useAppStore((s) => s.character);
+  const dayCount = useAppStore((s) => s.dayCount);
   const [reading, setReading] = useState<StoryEpisode | null>(null);
   const [lineIndex, setLineIndex] = useState(0);
 

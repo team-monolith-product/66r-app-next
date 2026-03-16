@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
 import GameButton from "@/components/ui/GameButton";
 import SparkleEffect from "@/components/ui/SparkleEffect";
 
@@ -19,7 +20,8 @@ const PRESETS = [
 const MAX_HABITS = 5;
 
 export default function HabitSetupScreen() {
-  const { dispatch } = useApp();
+  const router = useRouter();
+  const setHabits = useAppStore((s) => s.setHabits);
   const [selected, setSelected] = useState<string[]>([]);
   const [custom, setCustom] = useState("");
   const [mode, setMode] = useState<"preset" | "custom">("preset");
@@ -47,8 +49,8 @@ export default function HabitSetupScreen() {
 
   const handleConfirm = () => {
     if (selected.length === 0) return;
-    dispatch({ type: "SET_HABITS", habits: selected });
-    dispatch({ type: "SET_SCREEN", screen: "characterSelect" });
+    setHabits(selected);
+    router.push("/setup/character");
   };
 
   return (

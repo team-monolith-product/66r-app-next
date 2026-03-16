@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
 import GameButton from "@/components/ui/GameButton";
 import SparkleEffect from "@/components/ui/SparkleEffect";
 
@@ -24,7 +24,7 @@ const SLIDES = [
 ];
 
 export default function OnboardingScreen() {
-  const { dispatch } = useApp();
+  const router = useRouter();
   const [page, setPage] = useState(0);
   const slide = SLIDES[page];
 
@@ -32,7 +32,7 @@ export default function OnboardingScreen() {
     if (page < SLIDES.length - 1) {
       setPage(page + 1);
     } else {
-      dispatch({ type: "SET_SCREEN", screen: "habitSetup" });
+      router.push("/setup/habits");
     }
   };
 
@@ -43,7 +43,7 @@ export default function OnboardingScreen() {
       {/* 건너뛰기 */}
       <button
         className="absolute top-4 right-4 text-[var(--text-secondary)] text-sm z-10"
-        onClick={() => dispatch({ type: "SET_SCREEN", screen: "habitSetup" })}
+        onClick={() => router.push("/setup/habits")}
       >
         건너뛰기
       </button>

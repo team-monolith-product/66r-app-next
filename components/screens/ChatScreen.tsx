@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
@@ -43,8 +45,11 @@ const CHOICES: Record<string, string[]> = {
 };
 
 export default function ChatScreen() {
-  const { state, dispatch } = useApp();
-  const { character } = state;
+  const router = useRouter();
+  useRouteGuard("setup-complete");
+
+  const character = useAppStore((s) => s.character);
+  const addAffection = useAppStore((s) => s.addAffection);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -71,7 +76,7 @@ export default function ChatScreen() {
       const reply = responses[Math.floor(Math.random() * responses.length)];
       setMessages((prev) => [...prev, { id: Date.now() + 1, from: "character", text: reply }]);
       setIsTyping(false);
-      dispatch({ type: "ADD_AFFECTION", amount: 2 });
+      addAffection(2);
     }, 900 + Math.random() * 600);
   };
 
@@ -91,7 +96,7 @@ export default function ChatScreen() {
           boxShadow: "0 2px 8px rgba(90,150,200,0.10)",
         }}
       >
-        <button className="text-[#7a9bb5] text-xl" onClick={() => dispatch({ type: "SET_SCREEN", screen: "home" })}>
+        <button className="text-[#7a9bb5] text-xl" onClick={() => router.push("/home")}>
           ←
         </button>
         <CharacterDisplay character={character} size="sm" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type CharacterData } from "@/components/AppContext";
+import { type CharacterData } from "@/store/useAppStore";
 import Live2DViewer from "./Live2DViewer";
 
 interface CharacterDisplayProps {

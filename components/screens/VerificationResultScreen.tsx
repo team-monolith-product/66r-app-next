@@ -1,13 +1,23 @@
 "use client";
 
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
 
 export default function VerificationResultScreen() {
-  const { state, dispatch } = useApp();
-  const { verificationSuccess, verificationCharacterMessage, habitVerificationResults, character, streak, dayCount, unlockedStories } = state;
+  const router = useRouter();
+  useRouteGuard("verification-done");
+
+  const verificationSuccess = useAppStore((s) => s.verificationSuccess);
+  const verificationCharacterMessage = useAppStore((s) => s.verificationCharacterMessage);
+  const habitVerificationResults = useAppStore((s) => s.habitVerificationResults);
+  const character = useAppStore((s) => s.character);
+  const streak = useAppStore((s) => s.streak);
+  const dayCount = useAppStore((s) => s.dayCount);
+  const unlockedStories = useAppStore((s) => s.unlockedStories);
 
   const isSuccess = verificationSuccess === true;
 
@@ -142,15 +152,15 @@ export default function VerificationResultScreen() {
       {/* 버튼 — 하단 고정, 세로 스택 */}
       <div className="px-6 pb-10 pt-3 z-10 flex flex-col gap-2">
         {isSuccess ? (
-          <GameButton fullWidth size="lg" onClick={() => dispatch({ type: "SET_SCREEN", screen: "chat" })}>
+          <GameButton fullWidth size="lg" onClick={() => router.push("/chat")}>
             ♡ 대화하기
           </GameButton>
         ) : (
-          <GameButton fullWidth size="lg" onClick={() => dispatch({ type: "SET_SCREEN", screen: "verification" })}>
+          <GameButton fullWidth size="lg" onClick={() => router.push("/verification")}>
             다시 시도
           </GameButton>
         )}
-        <GameButton variant="ghost" fullWidth onClick={() => dispatch({ type: "SET_SCREEN", screen: "home" })}>
+        <GameButton variant="ghost" fullWidth onClick={() => router.push("/home")}>
           홈으로
         </GameButton>
       </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import GameButton from "@/components/ui/GameButton";
 import SparkleEffect from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
@@ -22,8 +24,14 @@ type InputTab = "text" | "image";
 type HabitImage = { base64: string; mediaType: string; preview: string } | null;
 
 export default function VerificationScreen() {
-  const { state, dispatch } = useApp();
-  const { habits, character, dayCount } = state;
+  const router = useRouter();
+  useRouteGuard("setup-complete");
+
+  const habits = useAppStore((s) => s.habits);
+  const character = useAppStore((s) => s.character);
+  const dayCount = useAppStore((s) => s.dayCount);
+  const verifySuccess = useAppStore((s) => s.verifySuccess);
+  const verifyFail = useAppStore((s) => s.verifyFail);
 
   const [tab, setTab] = useState<InputTab>("text");
   const [textContent, setTextContent] = useState("");
@@ -102,12 +110,12 @@ export default function VerificationScreen() {
         message: string;
       };
 
-      dispatch({
-        type: overallVerified ? "VERIFY_SUCCESS" : "VERIFY_FAIL",
-        message,
-        habitResults,
-      });
-      dispatch({ type: "SET_SCREEN", screen: "verificationResult" });
+      if (overallVerified) {
+        verifySuccess(message, habitResults);
+      } else {
+        verifyFail(message, habitResults);
+      }
+      router.push("/verification/result");
     } catch {
       setError("인증 요청에 실패했어요. 다시 시도해주세요.");
     } finally {
@@ -117,8 +125,8 @@ export default function VerificationScreen() {
 
   const handleGiveUp = () => {
     const message = GIVE_UP_MESSAGES[characterType] ?? GIVE_UP_MESSAGES.genki;
-    dispatch({ type: "VERIFY_FAIL", message });
-    dispatch({ type: "SET_SCREEN", screen: "verificationResult" });
+    verifyFail(message);
+    router.push("/verification/result");
   };
 
   return (
@@ -129,7 +137,7 @@ export default function VerificationScreen() {
       <div className="flex items-center gap-3 px-5 pt-12 pb-4 z-10">
         <button
           className="text-[var(--text-secondary)]"
-          onClick={() => dispatch({ type: "SET_SCREEN", screen: "home" })}
+          onClick={() => router.push("/home")}
         >
           ←
         </button>

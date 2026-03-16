@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { SparkleBurst } from "@/components/ui/SparkleEffect";
 import CharacterDisplay from "@/components/ui/CharacterDisplay";
 import GameButton from "@/components/ui/GameButton";
@@ -97,8 +99,15 @@ const PANEL = { background: "rgba(255,255,255,0.92)", border: "1px solid rgba(16
 
 /* ═══════════════════════════════════════════════════ */
 export default function EndingScreen() {
-  const { state, dispatch } = useApp();
-  const { endingType, character, affection, completedDays, streak } = state;
+  const router = useRouter();
+  useRouteGuard("setup-complete");
+
+  const endingType = useAppStore((s) => s.endingType);
+  const character = useAppStore((s) => s.character);
+  const affection = useAppStore((s) => s.affection);
+  const completedDays = useAppStore((s) => s.completedDays);
+  const streak = useAppStore((s) => s.streak);
+  const reset = useAppStore((s) => s.reset);
 
   type Phase = "vn" | "result" | "lover";
   const [phase, setPhase]       = useState<Phase>("vn");
@@ -128,6 +137,11 @@ export default function EndingScreen() {
   /* ── 연인 모드 ── */
   const advanceLover = () => {
     if (loverLine < loverLines.length - 1) setLoverLine((i) => i + 1);
+  };
+
+  const handleReset = () => {
+    reset();
+    router.push("/");
   };
 
   /* ════════════════════════════════════════════════ */
@@ -258,7 +272,7 @@ export default function EndingScreen() {
             <GameButton onClick={advanceLover} variant="secondary">다음 ▶</GameButton>
           ) : (
             <div className="flex flex-col gap-3 w-full max-w-xs">
-              <GameButton fullWidth onClick={() => dispatch({ type: "RESET" })}>새로운 여정 시작하기</GameButton>
+              <GameButton fullWidth onClick={handleReset}>새로운 여정 시작하기</GameButton>
               <p className="text-[10px] text-center opacity-60" style={{ color: "#7a9bb5" }}>처음부터 다시 시작합니다</p>
             </div>
           )}
@@ -361,7 +375,7 @@ export default function EndingScreen() {
           <GameButton
             fullWidth
             variant={isBest ? "ghost" : "primary"}
-            onClick={() => dispatch({ type: "RESET" })}
+            onClick={handleReset}
           >
             새로운 여정 시작하기
           </GameButton>

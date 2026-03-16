@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/components/AppContext";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 import BottomNav from "@/components/ui/BottomNav";
 import AffectionBar from "@/components/ui/AffectionBar";
 import DayCalendar from "@/components/ui/DayCalendar";
@@ -20,8 +21,17 @@ const PRESETS = [
 const MAX_HABITS = 5;
 
 export default function DashboardScreen() {
-  const { state, dispatch } = useApp();
-  const { dayCount, streak, completedDays, habits, todayHabitChecks, character, currency, affection } = state;
+  useRouteGuard("setup-complete");
+
+  const dayCount = useAppStore((s) => s.dayCount);
+  const streak = useAppStore((s) => s.streak);
+  const completedDays = useAppStore((s) => s.completedDays);
+  const habits = useAppStore((s) => s.habits);
+  const todayHabitChecks = useAppStore((s) => s.todayHabitChecks);
+  const character = useAppStore((s) => s.character);
+  const currency = useAppStore((s) => s.currency);
+  const affection = useAppStore((s) => s.affection);
+  const setHabits = useAppStore((s) => s.setHabits);
 
   const [addOpen, setAddOpen] = useState(false);
   const [customInput, setCustomInput] = useState("");
@@ -42,7 +52,7 @@ export default function DashboardScreen() {
 
   const removeHabit = (habit: string) => {
     const next = habits.filter((h) => h !== habit);
-    dispatch({ type: "SET_HABITS", habits: next });
+    setHabits(next);
   };
 
   const startEdit = (index: number) => {
@@ -57,7 +67,7 @@ export default function DashboardScreen() {
     if (habits.includes(trimmed) && habits[editingIndex] !== trimmed) { cancelEdit(); return; }
     const next = [...habits];
     next[editingIndex] = trimmed;
-    dispatch({ type: "SET_HABITS", habits: next });
+    setHabits(next);
     setEditingIndex(null);
   };
 
@@ -66,7 +76,7 @@ export default function DashboardScreen() {
   const addHabit = (label: string) => {
     const trimmed = label.trim();
     if (!trimmed || habits.includes(trimmed) || habits.length >= MAX_HABITS) return;
-    dispatch({ type: "SET_HABITS", habits: [...habits, trimmed] });
+    setHabits([...habits, trimmed]);
     setCustomInput("");
   };
 

@@ -1,23 +1,23 @@
 "use client";
 
-import { useApp, type ScreenName } from "@/components/AppContext";
+import { useRouter, usePathname } from "next/navigation";
 
 interface NavItem {
-  screen: ScreenName;
+  path: string;
   label: string;
   icon: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { screen: "home",      label: "홈",     icon: "⌂" },
-  { screen: "chat",      label: "대화",   icon: "♡" },
-  { screen: "dashboard", label: "기록",   icon: "◈" },
-  { screen: "story",     label: "스토리", icon: "✦" },
+  { path: "/home",      label: "홈",     icon: "⌂" },
+  { path: "/chat",      label: "대화",   icon: "♡" },
+  { path: "/dashboard", label: "기록",   icon: "◈" },
+  { path: "/story",     label: "스토리", icon: "✦" },
 ];
 
 export default function BottomNav() {
-  const { state, dispatch } = useApp();
-  const { screen } = state;
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <nav
@@ -31,11 +31,11 @@ export default function BottomNav() {
     >
       <div className="flex items-center justify-around">
         {NAV_ITEMS.map((item) => {
-          const isActive = screen === item.screen;
+          const isActive = pathname === item.path;
           return (
             <button
-              key={item.screen}
-              onClick={() => dispatch({ type: "SET_SCREEN", screen: item.screen })}
+              key={item.path}
+              onClick={() => router.push(item.path)}
               className="flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-all active:scale-95"
               style={
                 isActive

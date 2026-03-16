@@ -1,10 +1,11 @@
 "use client";
 
-import { useApp } from "@/components/AppContext";
+import { useAppStore } from "@/store/useAppStore";
 
 export default function TopStatusBar() {
-  const { state } = useApp();
-  const { dayCount, streak, currency } = state;
+  const dayCount = useAppStore((s) => s.dayCount);
+  const streak = useAppStore((s) => s.streak);
+  const currency = useAppStore((s) => s.currency);
 
   return (
     <div className="flex items-center justify-between px-4 py-2 glass-panel rounded-xl mx-3 mt-3">
