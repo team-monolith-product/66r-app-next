@@ -129,7 +129,7 @@ export default function HomeScreen() {
         {/* 호감도(체력) 바 */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-2xl" style={panel}>
           <span className="text-[11px] font-black shrink-0" style={{ color: "#1a3a5c" }}>
-            체력
+            호감도
           </span>
           <div
             className="flex-1 h-[18px] rounded-full overflow-hidden"
