@@ -143,8 +143,9 @@ export default function HomeScreen() {
           </div>
 
           <button
-            className="text-[11px] font-bold px-2.5 py-1 rounded-xl shrink-0"
+            className="text-[11px] font-bold px-2.5 py-1 rounded-xl shrink-0 transition-all active:scale-95"
             style={{ background: "#e8f4fc", color: "#4a8aaa", border: "1px solid #b8d8ee" }}
+            onClick={() => router.push("/habits")}
           >
             상세
           </button>

@@ -15,7 +15,8 @@
       "Skill(claude-api)",
       "Bash(npm uninstall:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:console.groq.com)"
+      "WebFetch(domain:console.groq.com)",
+      "Bash(mkdir:*)"
     ]
   }
 }
