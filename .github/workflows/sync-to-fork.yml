@@ -13,7 +13,8 @@ jobs:
           fetch-depth: 0
 
       - name: Push to personal repo
+        env:
+          TOKEN: ${{ secrets.PERSONAL_REPO_TOKEN }}
         run: |
-          git remote add personal https://x-access-token:${{ secrets.PERSONAL_REPO_TOKEN }}@github.com/winshine0326/66r-app-next.git
-          git remote -v
+          git remote add personal https://x-access-token:${TOKEN}@github.com/winshine0326/66r-app-next.git
           git push personal HEAD:main --force
