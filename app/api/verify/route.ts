@@ -1,8 +1,6 @@
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 const PERSONALITY_DESCRIPTIONS: Record<string, string> = {
   tsundere: "겉으로는 냉담하지만 속으로는 응원하는 츤데레. 짧고 퉁명스럽게 말하며, 성공 시 마지못해 인정하는 태도를 보인다.",
   genki: "에너지 넘치고 긍정적인 성격. 성공에 크게 기뻐하고 실패에도 따뜻하게 격려한다.",
@@ -17,6 +15,7 @@ type ConversationMessage = {
 };
 
 export async function POST(req: NextRequest) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
     const body = await req.json();
     const { habit, characterType, characterName, dayCount, streak, messages, habitTurnCount } = body as {
